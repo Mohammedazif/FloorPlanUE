@@ -83,10 +83,12 @@ area, the adjacency summary, and any label that belonged to no room.
 ### A whole building
 
 ```
-FloorPlan.ImportBuilding Ground=D:/Plans/g.dxf@0 First=D:/Plans/1.dxf@3000 bake
+FloorPlan.ImportBuilding Ground=D:/Plans/g.dxf@0 First=D:/Plans/1.dxf@2900 bake
 ```
 
 Each argument is `<name>=<path>@<elevationMm>`; the elevation may be left off for ground level.
+With the default 2700 mm walls and the 200 mm slab, an upper storey at 2900 sits flush on the
+wall tops below — a larger elevation leaves a visible gap band between the storeys.
 Every storey is compiled separately, stacked at its elevation, and parented under one building
 actor. The same flags apply, and `json=` writes all storeys into one document.
 
@@ -419,9 +421,11 @@ provides — but it is emptied and hidden, and the static mesh component is atta
 
 ## Walls sit *into* the slab, not on it
 
-The floor slab occupies Z from 0 down to −50 mm. Walls run from the same −50 mm up to the wall
-height, so a wall overlaps the full thickness of the slab beside it instead of meeting it along
-a line.
+The floor slab occupies Z from 0 down to −200 mm. Walls run from the same −200 mm up to the
+wall height, so a wall overlaps the full thickness of the slab beside it instead of meeting it
+along a line. The slab is deliberately at real construction thickness: Lumen and Virtual Shadow
+Maps bleed light straight through plates much thinner than their trace bias, so a token-thin
+slab reads as translucent from below.
 
 Butting them at Z = 0 leaves the building with no continuous underside: below the finished
 floor and outside the room boundary there is nothing, so from a low angle you see an open slot

@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "FloorPlanElementActors.h"
 #include "FloorPlanImportOptions.h"
+#include "FloorPlanLimits.h"
 #include "FloorPlanMeshBuilder.h"
 #include "FloorPlanMeshPlacer.h"
 #include "FloorPlanStairMesh.h"
@@ -18,7 +19,7 @@ using UE::Geometry::FDynamicMesh3;
 
 namespace
 {
-    constexpr double FloorSlabThicknessMm = 50.0;
+    constexpr double FloorSlabThicknessMm = FloorPlan::Limits::FloorSlabThicknessMm;
     constexpr double MillimetreToUnreal = FFloorPlanMeshBuilder::MillimetreToUnreal;
 
     FString ToUnreal(const std::string& Text)

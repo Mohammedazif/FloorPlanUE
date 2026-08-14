@@ -81,4 +81,5 @@ namespace FloorPlan::Limits
     inline constexpr double DefaultWindowSillHeightMm = 900.0;
     inline constexpr double DefaultWindowHeadHeightMm = 2100.0;
     inline constexpr double DefaultWallHeightMm = 2700.0;
+    inline constexpr double FloorSlabThicknessMm = 200.0;
 }
