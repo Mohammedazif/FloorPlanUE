@@ -3,6 +3,7 @@
 #if WITH_EDITOR
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
+#include "DynamicMesh/MeshNormals.h"
 #include "DynamicMeshToMeshDescription.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/StaticMesh.h"
@@ -84,10 +85,18 @@ UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& 
     // A non-default scale re-keys the cached distance field so a bad one is never reused.
     Model.BuildSettings.DistanceFieldResolutionScale = BakedDistanceFieldResolutionScale;
 
+    UE::Geometry::FDynamicMesh3 Prepared = Source;
+    if (!Prepared.HasAttributes())
+    {
+        Prepared.EnableAttributes();
+    }
+    // mirrors FloorPlanMeshBuilder.cpp:336 — boxes need hard per-triangle normals.
+    UE::Geometry::FMeshNormals::InitializeMeshToPerTriangleNormals(&Prepared);
+
     FMeshDescription MeshDescription;
     FStaticMeshAttributes(MeshDescription).Register();
     FDynamicMeshToMeshDescription Converter;
-    Converter.Convert(&Source, MeshDescription);
+    Converter.Convert(&Prepared, MeshDescription);
 
     Baked->CreateMeshDescription(0, MoveTemp(MeshDescription));
     Baked->CommitMeshDescription(0);
