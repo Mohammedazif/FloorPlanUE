@@ -15,6 +15,11 @@ public:
                              const FString& AssetPathAndName, bool bEnableNanite,
                              UMaterialInterface* Material);
 
+    /// As above with one material slot per entry, matching the mesh's material ids.
+    static UStaticMesh* Bake(const UE::Geometry::FDynamicMesh3& Source,
+                             const FString& AssetPathAndName, bool bEnableNanite,
+                             const TArray<UMaterialInterface*>& Materials);
+
     /// Strips whatever a source filename contains that a package path cannot.
     static FString SanitiseAssetName(const FString& Name);
 };

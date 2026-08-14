@@ -73,9 +73,18 @@ FloorPlan.Import <path.dxf> [WallLayer|*] [MmPerUnit] [single|double]
 Pass `*` for the layer to accept every layer. Pass `0` for `MmPerUnit` to keep what the file
 declares.
 
-Two flags may appear **anywhere** in the line, in any order, because they are flags rather than
-positions: `bake` writes static mesh assets instead of dynamic meshes, and `json=<path>` dumps
-the whole model to a file. `FloorPlan.Import plan.dxf bake` is enough on its own.
+Three flags may appear **anywhere** in the line, in any order, because they are flags rather
+than positions: `bake` writes static mesh assets instead of dynamic meshes, `merge` bakes each
+storey's rooms and walls as **one** asset instead of one per element (it implies `bake`), and
+`json=<path>` dumps the whole model to a file. `FloorPlan.Import plan.dxf bake` is enough on
+its own.
+
+Prefer `merge` when the building is lit dynamically: Lumen caches light per mesh and its cache
+misbehaves exactly at the borders where separate meshes meet, so a shell of many wall and floor
+assets shows faint bright seams a single merged asset does not. The merged asset carries two
+material slots — walls first, floors second — and the room and wall actors still spawn with
+their ids, areas and adjacency, just without meshes of their own. Columns, fixtures and stairs
+keep their individual meshes either way.
 
 Actors appear in the level immediately; the log prints storey, room and wall counts, total
 area, the adjacency summary, and any label that belonged to no room.

@@ -9,11 +9,11 @@ namespace
 {
     const TCHAR* ImportUsage =
         TEXT("Usage: FloorPlan.Import <path.dxf> [WallLayer|*] [MmPerUnit] [single|double], "
-             "plus bake and/or json=<path> anywhere");
+             "plus bake, merge and/or json=<path> anywhere");
 
     const TCHAR* BuildingUsage =
-        TEXT("Usage: FloorPlan.ImportBuilding <name>=<path.dxf>@<elevationMm> ... , plus bake "
-             "and/or json=<path> anywhere");
+        TEXT("Usage: FloorPlan.ImportBuilding <name>=<path.dxf>@<elevationMm> ... , plus bake, "
+             "merge and/or json=<path> anywhere");
 
     /// Pulls the flags that may appear in any position, leaving the ordered settings behind.
     TArray<FString> TakeFlags(const TArray<FString>& Args, int32 First,
@@ -25,6 +25,12 @@ namespace
             if (Args[Index].Equals(TEXT("bake"), ESearchCase::IgnoreCase))
             {
                 Options.bBakeToStaticMesh = true;
+                continue;
+            }
+            if (Args[Index].Equals(TEXT("merge"), ESearchCase::IgnoreCase))
+            {
+                Options.bBakeToStaticMesh = true;
+                Options.bMergeStoreyMesh = true;
                 continue;
             }
             if (Args[Index].StartsWith(TEXT("json="), ESearchCase::IgnoreCase))

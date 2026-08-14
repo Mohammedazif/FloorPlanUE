@@ -72,6 +72,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Static Mesh")
     bool bEnableNanite = false;
 
+    /// One baked asset per storey instead of one per element, so lighting sees no seams.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Static Mesh")
+    bool bMergeStoreyMesh = false;
+
     /// Baked assets land in a subfolder of this named after the DXF.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Static Mesh")
     FString StaticMeshFolder = TEXT("/Game/FloorPlan");
