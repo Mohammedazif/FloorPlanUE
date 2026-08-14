@@ -1,0 +1,101 @@
+{
+  "source": "Fixtures/single_room.dxf",
+  "contract": "Every file must produce a typed diagnostic. No crash, no out-of-bounds read, no unbounded allocation.",
+  "files": {
+    "empty.dxf": {
+      "reason": "Zero-byte file.",
+      "bytes": 0,
+      "must_fail_cleanly": true
+    },
+    "truncate_at_20_bytes.dxf": {
+      "reason": "Truncated inside the header.",
+      "bytes": 20,
+      "must_fail_cleanly": true
+    },
+    "truncate_half.dxf": {
+      "reason": "Truncated at 50% of the byte length.",
+      "bytes": 18182,
+      "must_fail_cleanly": true
+    },
+    "truncate_mid_entity.dxf": {
+      "reason": "Truncated inside the first wall LWPOLYLINE's vertex list, in the ENTITIES section.",
+      "bytes": 27751,
+      "must_fail_cleanly": true
+    },
+    "no_eof.dxf": {
+      "reason": "Valid content with the EOF marker removed.",
+      "bytes": 36356,
+      "must_fail_cleanly": true
+    },
+    "not_dxf.dxf": {
+      "reason": "Plain text with no DXF structure.",
+      "bytes": 2850,
+      "must_fail_cleanly": true
+    },
+    "nan_coordinate.dxf": {
+      "reason": "Vertex 0 X of the first wall LWPOLYLINE is nan.",
+      "bytes": 36364,
+      "must_fail_cleanly": true
+    },
+    "infinite_coordinate.dxf": {
+      "reason": "Vertex 0 Y of the first wall LWPOLYLINE overflows to infinity.",
+      "bytes": 36366,
+      "must_fail_cleanly": true
+    },
+    "absurd_coordinate.dxf": {
+      "reason": "Vertex 0 X of the first wall LWPOLYLINE is 1e30, beyond any sane extent.",
+      "bytes": 36367,
+      "must_fail_cleanly": true
+    },
+    "nan_coordinate_second_vertex.dxf": {
+      "reason": "Vertex 2 Y of the first wall LWPOLYLINE is nan, mid-loop rather than at the head.",
+      "bytes": 36361,
+      "must_fail_cleanly": true
+    },
+    "huge_vertex_count.dxf": {
+      "reason": "First wall LWPOLYLINE declares INT32_MAX vertices and supplies 4.",
+      "bytes": 36373,
+      "must_fail_cleanly": true
+    },
+    "negative_vertex_count.dxf": {
+      "reason": "First wall LWPOLYLINE declares -1 vertices and supplies 4.",
+      "bytes": 36365,
+      "must_fail_cleanly": true
+    },
+    "understated_vertex_count.dxf": {
+      "reason": "First wall LWPOLYLINE declares 2 vertices and supplies 4.",
+      "bytes": 36364,
+      "must_fail_cleanly": true
+    },
+    "non_numeric_group_code.dxf": {
+      "reason": "The group code preceding a wall vertex X is not an integer.",
+      "bytes": 36369,
+      "must_fail_cleanly": true
+    },
+    "enormous_string_value.dxf": {
+      "reason": "The first wall LWPOLYLINE's layer name is two million characters.",
+      "bytes": 2036358,
+      "must_fail_cleanly": true
+    },
+    "self_referencing_block.dxf": {
+      "reason": "BLOCK CYCLE_A inserts itself.",
+      "bytes": 36498,
+      "must_fail_cleanly": true
+    },
+    "mutual_block_cycle.dxf": {
+      "reason": "CYCLE_A inserts CYCLE_B which inserts CYCLE_A.",
+      "bytes": 36632,
+      "must_fail_cleanly": true
+    },
+    "dangling_block_reference.dxf": {
+      "reason": "INSERT names a block with no definition.",
+      "bytes": 36443,
+      "must_fail_cleanly": true
+    },
+    "binary_truncated.dxf": {
+      "reason": "Binary DXF truncated to one third of its length.",
+      "bytes": 10456,
+      "must_fail_cleanly": true
+    }
+  }
+}

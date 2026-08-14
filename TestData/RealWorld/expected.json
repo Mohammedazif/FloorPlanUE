@@ -1,0 +1,55 @@
+{
+  "note": "Expected answers for real-world files, measured from the bytes rather than assumed. Only files with a derivable answer appear here.",
+  "files": {
+    "wipeout_door.dxf": {
+      "dxf_version": "AC1032",
+      "declared_insunits": 1,
+      "declared_unit_name": "inches",
+      "declared_unit_is_wrong": true,
+      "unit_evidence": "A wall 3583.0139 units long and 100.0000 units thick is 91.0 m by 2.54 m if the declared inch unit is honoured. The geometry is plainly millimetres, so the header lies and a caller must override it.",
+      "wall_layer": "A.Wall_Internal",
+      "wall_convention": "solid: each wall is its own closed rectangle, not a pair of faces and not a centreline",
+      "entities": {
+        "LINE": 136,
+        "MTEXT": 4,
+        "LWPOLYLINE": 2,
+        "INSERT": 2,
+        "CIRCLE": 2,
+        "ARC": 2,
+        "WIPEOUT": 1
+      },
+      "layers": ["0", "A.Wall_Internal", "Defpoints"],
+      "wall_solids": [
+        {
+          "min": [9383.6463, 6658.6554],
+          "max": [12966.6601, 6758.6554],
+          "length_mm": 3583.0139,
+          "thickness_mm": 100.0,
+          "area_mm2": 358301.385067
+        },
+        {
+          "min": [9449.5051, 4665.5763],
+          "max": [13032.519, 4765.5763],
+          "length_mm": 3583.0139,
+          "thickness_mm": 100.0,
+          "area_mm2": 358301.385067
+        }
+      ],
+      "wall_footprint_mm2": 716602.770134,
+      "rooms": [],
+      "rooms_note": "The two wall runs are parallel bars 1893.08 mm apart and enclose nothing. A fragment, not a plan; zero rooms is the correct answer.",
+      "paired_walls": 2,
+      "paired_wall_thickness_mm": 100.0,
+      "pairing_note": "Each rectangle's two long edges pair at a 100 mm gap. Its short edges are 3583 mm apart and the two rectangles are 1893 mm apart, both beyond MaxWallThicknessMm, so neither becomes a wall.",
+      "blocks": {
+        "wipeout_door": {
+          "inserted_at": [[10519.4372, 6780.0179], [12610.2028, 6777.4853]],
+          "contents": {"WIPEOUT": 1, "LINE": 66, "CIRCLE": 1, "ARC": 1},
+          "layer": "0"
+        }
+      },
+      "mtext_is_commentary": true,
+      "mtext_note": "All four MTEXT sit on layer 0 and describe the wipeout demonstration; none is a room label."
+    }
+  }
+}

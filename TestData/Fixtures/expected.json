@@ -1,0 +1,408 @@
+{
+  "units": "mm",
+  "wall_representation": "double line: separate closed faces on layer A-WALL",
+  "fixtures": {
+    "single_room.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": null,
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "Interior 5000x4000, uniform 200 wall. Baseline case.",
+      "wall_footprint_mm2": 3760000.0
+    },
+    "two_rooms_shared_wall.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 12000000.0,
+          "name": null,
+          "area_m2": 12.0
+        },
+        {
+          "area_mm2": 9000000.0,
+          "name": null,
+          "area_m2": 9.0
+        }
+      ],
+      "walls": 5,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200,
+        150
+      ],
+      "openings": [],
+      "note": "Shared 150 partition. Wall count before junction splitting; splitting policy may raise it.",
+      "wall_footprint_mm2": 4670000.0
+    },
+    "l_shaped_room.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 26000000.0,
+          "name": null,
+          "area_m2": 26.0
+        }
+      ],
+      "walls": 6,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "6000x5000 less a 2000x2000 notch. Reflex corner on the outer face.",
+      "wall_footprint_mm2": 4560000.0
+    },
+    "room_in_room.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 45750000.0,
+          "name": null,
+          "area_m2": 45.75
+        },
+        {
+          "area_mm2": 1440000.0,
+          "name": null,
+          "area_m2": 1.44
+        }
+      ],
+      "walls": 8,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200,
+        150,
+        150,
+        150,
+        150
+      ],
+      "openings": [],
+      "note": "Main room 48 m2 less the 1.5x1.5 shaft footprint. Shaft interior 1200x1200.",
+      "wall_footprint_mm2": 6570000.0
+    },
+    "door_and_window.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": null,
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [
+        {
+          "type": "door",
+          "block": "DOOR_900",
+          "width_mm": 900.0,
+          "host": "bottom"
+        },
+        {
+          "type": "window",
+          "block": "WIN_1200",
+          "width_mm": 1200.0,
+          "host": "right"
+        }
+      ],
+      "note": "Block names carry the type and nominal width. Door block encodes swing as an arc.",
+      "wall_footprint_mm2": 3760000.0
+    },
+    "labeled_rooms.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 12000000.0,
+          "name": "Bedroom 1",
+          "area_m2": 12.0
+        },
+        {
+          "area_mm2": 9000000.0,
+          "name": "Bathroom",
+          "area_m2": 9.0
+        }
+      ],
+      "walls": 5,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200,
+        150
+      ],
+      "openings": [],
+      "unassigned_text": [
+        "NORTH ELEVATION"
+      ],
+      "note": "Third TEXT sits outside every loop and must not be assigned to a room.",
+      "wall_footprint_mm2": 4670000.0
+    },
+    "varying_thickness.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": null,
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        150,
+        300,
+        150,
+        300
+      ],
+      "openings": [],
+      "note": "Breaks the uniform-thickness assumption. Left/right 300, top/bottom 150.",
+      "wall_footprint_mm2": 4080000.0
+    },
+    "arc_wall.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 26283185.307179585,
+          "name": null,
+          "area_m2": 26.283185307
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "Right wall is a semicircular bulge, r=2000 interior / 2200 exterior, encoded as an LWPOLYLINE bulge of 1.0.",
+      "wall_footprint_mm2": 4199468.914507713
+    },
+    "single_room_r12.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": null,
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "single_room.dxf as R12 POLYLINE, no LWPOLYLINE entity available.",
+      "wall_footprint_mm2": 3760000.0
+    },
+    "single_room_binary.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": null,
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "single_room.dxf written as binary DXF. Must produce an identical model.",
+      "wall_footprint_mm2": 3760000.0
+    },
+    "line_pair_room.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": null,
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "single_room geometry drawn as 8 loose LINE entities, the common real-world idiom. No closed polyline exists.",
+      "wall_footprint_mm2": 3760000.0
+    },
+    "single_line_two_rooms.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 25000000.0,
+          "name": "Living",
+          "area_m2": 25.0
+        },
+        {
+          "area_mm2": 15000000.0,
+          "name": "Kitchen",
+          "area_m2": 15.0
+        }
+      ],
+      "walls": 5,
+      "wall_thickness_mm": [],
+      "openings": [],
+      "convention": "single-line",
+      "note": "Walls are centrelines, not paired faces. Containment nesting cannot separate these rooms; only a planar arrangement can. The divider forms two T-junctions that must split the outer edges.",
+      "wall_footprint_mm2": 0.0
+    },
+    "two_storey_ground.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": "Living",
+          "area_m2": 20.0
+        },
+        {
+          "area_mm2": 11200000.0,
+          "name": "STAIR",
+          "area_m2": 11.2
+        }
+      ],
+      "walls": 7,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "wall_layer_filter": "A-WALL",
+      "note": "Ground plan of a two storey building. The stair room holds 17 tread lines on A-FLOR-STRS; those lines are geometry and must be excluded by the wall layer filter or they close into phantom rooms.",
+      "wall_footprint_mm2": 5760000.0
+    },
+    "two_storey_first.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": "Bedroom",
+          "area_m2": 20.0
+        },
+        {
+          "area_mm2": 11200000.0,
+          "name": "STAIR",
+          "area_m2": 11.2
+        }
+      ],
+      "walls": 7,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "wall_layer_filter": "A-WALL",
+      "note": "First floor of two_storey_ground.dxf. Same outline and same stair footprint, so the two stairs must match up vertically.",
+      "wall_footprint_mm2": 5760000.0
+    },
+    "annotated_room.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": null,
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "wall_layer_filter": "A-WALL",
+      "dimensions": [
+        {
+          "measurement_mm": 5000.0,
+          "geometry_mm": 5000.0,
+          "agrees": true
+        },
+        {
+          "measurement_mm": 3800.0,
+          "geometry_mm": 4000.0,
+          "agrees": false
+        }
+      ],
+      "note": "single_room plus the things a real drawing carries: a 400 square column on A-COLS, a grid line labelled A on A-GRID, and a furniture block on A-FURN. None may change the room area. The vertical DIMENSION deliberately states 3800 across a 4000 run, the signature of a drawing stretched without its dimensions being updated, and must be reported as disagreeing rather than believed.",
+      "wall_footprint_mm2": 3760000.0
+    },
+    "hatched_room.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 30550000.0,
+          "name": null,
+          "area_m2": 30.55
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "Wall poche drawn as one HATCH: an outer boundary of four LINE edges, an inner closed polyline path making the room, and a third path for a column standing in it. Reading only the first path would give no room at all. The two path types must both be built, and the containment nesting then charges the outermost and the column as wall material. The column is 900 so its own opposite faces are further apart than a wall may be, and it does not pair into one.",
+      "wall_footprint_mm2": 5450000.0
+    },
+    "hatch_curved_edges.dxf": {
+      "rooms": [],
+      "walls": 0,
+      "wall_thickness_mm": [],
+      "openings": [],
+      "note": "One HATCH edge path using every curved edge type: two LINE edges, a semicircular ARC edge bulging right, and a half ELLIPSE edge on the left. Exercises the arc bulge and the ellipse tessellation.",
+      "wall_footprint_mm2": 0.0
+    },
+    "line_pair_room_with_noise.dxf": {
+      "rooms": [
+        {
+          "area_mm2": 20000000.0,
+          "name": "Studio",
+          "area_m2": 20.0
+        }
+      ],
+      "walls": 4,
+      "wall_thickness_mm": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "openings": [],
+      "note": "line_pair_room plus a dimension line, a leader tick and a furniture rectangle on A-ANNO. Only A-WALL may contribute geometry.",
+      "wall_footprint_mm2": 3760000.0
+    }
+  }
+}
