@@ -9,7 +9,6 @@
 #include "FloorPlanLimits.h"
 #include "FloorPlanMeshBuilder.h"
 #include "FloorPlanMeshPlacer.h"
-#include "FloorPlanStoreyMeshMerger.h"
 #include "Materials/MaterialInterface.h"
 #include "UDynamicMesh.h"
 
@@ -139,12 +138,6 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
     const double Scale = Model.MillimetresPerUnit;
     const FVector Lift(0.0, 0.0, Storey.ElevationMm * MillimetreToUnreal);
     const FAttachmentTransformRules AttachRules(EAttachmentRule::KeepWorld, false);
-#if WITH_EDITOR
-    const bool bMergeStorey = Options.bBakeToStaticMesh && Options.bMergeStoreyMesh;
-#else
-    const bool bMergeStorey = false;
-#endif
-    FFloorPlanStoreyMeshMerger Merger;
 
     for (std::size_t Index = 0; Index < Model.Rooms.size(); ++Index)
     {
@@ -186,14 +179,10 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
                                  ? FString::Printf(TEXT("Room_%s"), *Actor->ElementId.Left(8))
                                  : Actor->RoomName);
 #endif
-        if (bHasFloor && bMergeStorey)
-        {
-            Merger.Append(Mesh, Placement, FFloorPlanStoreyMeshMerger::FloorSlot);
-        }
-        else if (bHasFloor &&
-                 FFloorPlanMeshPlacer::Place(Options, AssetFolder,
-                           FString::Printf(TEXT("Room_%s"), *Actor->ElementId.Left(8)),
-                           Options.FloorMaterial, Mesh, Actor))
+        if (bHasFloor &&
+            FFloorPlanMeshPlacer::Place(Options, AssetFolder,
+                      FString::Printf(TEXT("Room_%s"), *Actor->ElementId.Left(8)),
+                      Options.FloorMaterial, Mesh, Actor))
         {
             ++Report.BakedMeshes;
         }
@@ -242,13 +231,9 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
 #endif
         if (bHasMesh)
         {
-            if (bMergeStorey)
-            {
-                Merger.Append(Mesh, Placement, FFloorPlanStoreyMeshMerger::WallSlot);
-            }
-            else if (FFloorPlanMeshPlacer::Place(Options, AssetFolder,
-                             FString::Printf(TEXT("Wall_%s"), *Actor->ElementId.Left(8)),
-                             Options.WallMaterial, Mesh, Actor))
+            if (FFloorPlanMeshPlacer::Place(Options, AssetFolder,
+                          FString::Printf(TEXT("Wall_%s"), *Actor->ElementId.Left(8)),
+                          Options.WallMaterial, Mesh, Actor))
             {
                 ++Report.BakedMeshes;
             }
@@ -265,11 +250,6 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
 
     FFloorPlanFittingSpawner::Spawn(World, Model, Options, AssetFolder, Rise, Storey, Lift,
                                     AttachRules, Report);
-
-    if (bMergeStorey && Merger.Attach(Options, AssetFolder, Storey))
-    {
-        ++Report.BakedMeshes;
-    }
 
     Storey.RoomCount = Report.Rooms;
     Storey.WallCount = Report.Walls;

@@ -53,14 +53,6 @@ UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& 
                                               const FString& AssetPathAndName, bool bEnableNanite,
                                               UMaterialInterface* Material)
 {
-    return Bake(Source, AssetPathAndName, bEnableNanite,
-                TArray<UMaterialInterface*>{Material});
-}
-
-UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& Source,
-                                              const FString& AssetPathAndName, bool bEnableNanite,
-                                              const TArray<UMaterialInterface*>& Materials)
-{
 #if WITH_EDITOR
     if (Source.TriangleCount() == 0 || AssetPathAndName.IsEmpty())
     {
@@ -110,17 +102,9 @@ UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& 
     Baked->CommitMeshDescription(0);
 
     TArray<FStaticMaterial> Slots;
-    for (UMaterialInterface* Material : Materials)
-    {
-        FStaticMaterial& Slot = Slots.AddDefaulted_GetRef();
-        // The distance-field builder drops triangles whose slot material is empty or translucent.
-        Slot.MaterialInterface = DistanceFieldSafeMaterial(Material);
-    }
-    if (Slots.IsEmpty())
-    {
-        FStaticMaterial& Slot = Slots.AddDefaulted_GetRef();
-        Slot.MaterialInterface = DistanceFieldSafeMaterial(nullptr);
-    }
+    Slots.AddDefaulted();
+    // The distance-field builder drops every triangle whose slot material is empty or translucent.
+    Slots[0].MaterialInterface = DistanceFieldSafeMaterial(Material);
     Baked->SetStaticMaterials(Slots);
 
     Baked->bGenerateMeshDistanceField = true;
@@ -147,7 +131,7 @@ UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& 
     (void)Source;
     (void)AssetPathAndName;
     (void)bEnableNanite;
-    (void)Materials;
+    (void)Material;
     return nullptr;
 #endif
 }
