@@ -1,62 +1,37 @@
 #include "FloorPlanStaticMeshBaker.h"
 
 #if WITH_EDITOR
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
+#include "DynamicMeshToMeshDescription.h"
+#include "Engine/EngineTypes.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshSourceData.h"
-#include "FloorPlanMeshBuilder.h"
-#include "GeometryScript/CreateNewAssetUtilityFunctions.h"
-#include "GeometryScript/GeometryScriptTypes.h"
 #include "IAssetTools.h"
 #include "MaterialDomain.h"
 #include "Materials/Material.h"
+#include "Materials/MaterialInterface.h"
+#include "MeshDescription.h"
 #include "Modules/ModuleManager.h"
-#include "UDynamicMesh.h"
-#endif
+#include "PhysicsEngine/BodySetup.h"
+#include "StaticMeshAttributes.h"
+#include "UObject/Package.h"
 
-#if WITH_EDITOR
 namespace
 {
     constexpr float BakedDistanceFieldResolutionScale = 2.0f;
 
-    void FillEmptyMaterialSlots(UStaticMesh& Baked, UMaterialInterface* Material)
+    UMaterialInterface* DistanceFieldSafeMaterial(UMaterialInterface* Material)
     {
-        UMaterialInterface* Opaque =
-            Material != nullptr ? Material : UMaterial::GetDefaultMaterial(MD_Surface);
-        TArray<FStaticMaterial> Slots = Baked.GetStaticMaterials();
-        if (Slots.IsEmpty())
+        if (Material != nullptr)
         {
-            Slots.AddDefaulted();
-        }
-        bool bChanged = Slots.Num() != Baked.GetStaticMaterials().Num();
-        for (FStaticMaterial& Slot : Slots)
-        {
-            if (Slot.MaterialInterface == nullptr)
+            const EBlendMode Blend = Material->GetBlendMode();
+            if (Blend == BLEND_Opaque || Blend == BLEND_Masked)
             {
-                Slot.MaterialInterface = Opaque;
-                bChanged = true;
+                return Material;
             }
         }
-        if (bChanged)
-        {
-            Baked.SetStaticMaterials(Slots);
-        }
-    }
-
-    void RebuildWithDistanceField(UStaticMesh& Baked, UMaterialInterface* Material)
-    {
-        // The distance-field builder drops every triangle whose material slot is empty.
-        FillEmptyMaterialSlots(Baked, Material);
-        Baked.bGenerateMeshDistanceField = true;
-        if (Baked.GetNumSourceModels() > 0)
-        {
-            // A non-default scale re-keys the cached distance field so a bad one is never reused.
-            Baked.GetSourceModel(0).BuildSettings.DistanceFieldResolutionScale =
-                BakedDistanceFieldResolutionScale;
-        }
-        TArray<FText> BuildErrors;
-        // A non-null error array makes the rebuild run synchronously.
-        Baked.Build(true, &BuildErrors);
+        return UMaterial::GetDefaultMaterial(MD_Surface);
     }
 }
 #endif
@@ -83,27 +58,65 @@ UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& 
         return nullptr;
     }
 
-    UDynamicMesh* Carrier = NewObject<UDynamicMesh>();
-    FFloorPlanMeshBuilder::CopyToDynamicMesh(Source, Carrier);
-
     FAssetToolsModule& AssetTools =
         FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
     FString PackageName;
     FString AssetName;
     AssetTools.Get().CreateUniqueAssetName(AssetPathAndName, FString(), PackageName, AssetName);
 
-    FGeometryScriptCreateNewStaticMeshAssetOptions Options;
-    Options.bEnableNanite = bEnableNanite;
-
-    EGeometryScriptOutcomePins Outcome = EGeometryScriptOutcomePins::Failure;
-    UStaticMesh* Baked =
-        UGeometryScriptLibrary_CreateNewAssetFunctions::CreateNewStaticMeshAssetFromMesh(
-            Carrier, PackageName, Options, Outcome);
-    if (Outcome != EGeometryScriptOutcomePins::Success || Baked == nullptr)
+    UPackage* Package = CreatePackage(*PackageName);
+    if (Package == nullptr)
     {
         return nullptr;
     }
-    RebuildWithDistanceField(*Baked, Material);
+
+    UStaticMesh* Baked =
+        NewObject<UStaticMesh>(Package, FName(*AssetName), RF_Public | RF_Standalone);
+    if (Baked == nullptr)
+    {
+        return nullptr;
+    }
+
+    FStaticMeshSourceModel& Model = Baked->AddSourceModel();
+    Model.BuildSettings.bRecomputeNormals = false;
+    Model.BuildSettings.bRecomputeTangents = true;
+    Model.BuildSettings.bGenerateLightmapUVs = false;
+    // A non-default scale re-keys the cached distance field so a bad one is never reused.
+    Model.BuildSettings.DistanceFieldResolutionScale = BakedDistanceFieldResolutionScale;
+
+    FMeshDescription MeshDescription;
+    FStaticMeshAttributes(MeshDescription).Register();
+    FDynamicMeshToMeshDescription Converter;
+    Converter.Convert(&Source, MeshDescription);
+
+    Baked->CreateMeshDescription(0, MoveTemp(MeshDescription));
+    Baked->CommitMeshDescription(0);
+
+    TArray<FStaticMaterial> Slots;
+    Slots.AddDefaulted();
+    // The distance-field builder drops every triangle whose slot material is empty or translucent.
+    Slots[0].MaterialInterface = DistanceFieldSafeMaterial(Material);
+    Baked->SetStaticMaterials(Slots);
+
+    Baked->bGenerateMeshDistanceField = true;
+    Baked->NaniteSettings.bEnabled = bEnableNanite;
+    Baked->CreateBodySetup();
+    if (UBodySetup* Body = Baked->GetBodySetup())
+    {
+        Body->CollisionTraceFlag = CTF_UseComplexAsSimple;
+    }
+
+    TArray<FText> BuildErrors;
+    // A non-null error array makes the build run synchronously.
+    Baked->Build(true, &BuildErrors);
+    for (const FText& Error : BuildErrors)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("FloorPlan bake %s: %s"), *Baked->GetName(),
+               *Error.ToString());
+    }
+
+    Baked->MarkPackageDirty();
+    FAssetRegistryModule::AssetCreated(Baked);
     return Baked;
 #else
     (void)Source;

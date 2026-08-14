@@ -24,8 +24,12 @@ public class FloorPlanUnreal : ModuleRules
         {
             PrivateDependencyModuleNames.AddRange(new string[]
             {
+                "AssetRegistry",
                 "AssetTools",
                 "GeometryScriptingEditor",
+                "MeshConversion",
+                "MeshDescription",
+                "StaticMeshDescription",
                 "UnrealEd"
             });
         }
