@@ -50,7 +50,7 @@ bool FFloorPlanMeshPlacer::Place(const UFloorPlanImportOptions& Options,
     if (Options.bBakeToStaticMesh)
     {
         UStaticMesh* Baked = FFloorPlanStaticMeshBaker::Bake(Mesh, AssetFolder / AssetName,
-                                                             Options.bEnableNanite);
+                                                             Options.bEnableNanite, Material);
         if (AttachBakedMesh(Actor, Baked, Material))
         {
             return true;
