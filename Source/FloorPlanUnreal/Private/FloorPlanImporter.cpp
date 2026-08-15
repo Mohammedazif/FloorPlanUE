@@ -1,6 +1,7 @@
 #include "FloorPlanImporter.h"
 
 #include "Engine/World.h"
+#include "FloorPlanContactShadows.h"
 #include "FloorPlanElementActors.h"
 #include "FloorPlanElementSpawner.h"
 #include "FloorPlanMeshBuilder.h"
@@ -321,6 +322,12 @@ FFloorPlanImportResult UFloorPlanImporter::ImportBuilding(
     Building->WallCount = Result.WallCount;
     Building->OpeningCount = Result.OpeningCount;
     Building->TotalFloorAreaSquareMetres = Result.TotalFloorAreaSquareMetres;
+
+    if (Options->bEnsureSunContactShadows)
+    {
+        Result.ContactShadowLightsChanged =
+            FFloorPlanContactShadows::EnsureOnDirectionalLights(*World);
+    }
 
     WriteExport(*Options, Documents, Connections, Result);
     Result.bSucceeded = true;

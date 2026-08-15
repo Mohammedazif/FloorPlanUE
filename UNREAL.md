@@ -493,3 +493,31 @@ If you see that, the attribute set is missing — check `CopyToDynamicMesh`.
 - Editor-only calls are guarded with `WITH_EDITOR`; nothing here depends on
   `AGeneratedDynamicMeshActor`, which is editor-only and silently disappears in PIE and
   packaged builds.
+
+## Lighting sealed interiors
+
+A sealed, windowless room lit by a physically bright sun (a SunSky's directional light is
+75,000 lux) shows a **thin bright line hugging the floor–wall junction of every wall whose
+exterior faces the sun**, with a bloom halo around it. This is not a gap in the imported
+geometry: the shell is watertight and light-tight — a point light placed inside such a room
+leaks nothing out — and a plain engine cube stood against a wall grows the same line. It is a
+renderer contact artifact. Every shadow method (ray-traced shadows, virtual shadow maps,
+cascaded shadow maps) is imprecise in the last few millimetres where a receiver touches its
+occluder, and auto exposure, balancing a dim interior against a 75,000-lux sun, amplifies that
+sliver of missed occlusion by orders of magnitude until it reads as a glowing seam.
+
+The cure is the screen-space contact trace, which exists for exactly this range and works
+under every shadow method: on the directional light, **Contact Shadow Length = 0.05** (leave
+*Contact Shadow Length in World Space Units* off; raise to 0.1 if a trace of the line
+survives). **The importer applies this itself**: after spawning, it switches the trace on for
+every directional light in the level whose contact length is zero, and reports having done so.
+A light with any contact length already set is left alone, and
+`bEnsureSunContactShadows = false` on the import options disables the behaviour entirely.
+Clamping auto exposure (a PostProcessVolume with a Min EV100 suited to interiors) reduces the
+amplification and is the standard companion setting; the importer does not touch exposure.
+
+Do not chase this artifact through shadow cvars. It survives, unchanged, all of:
+`r.Shadow.Virtual.*`, `r.RayTracing.Shadows` and its denoiser and bias settings,
+`r.DistanceFieldShadowing`, `r.DynamicGlobalIlluminationMethod 0`, and reflection toggles —
+because it is not specific to any one shadow path. `showflag.DirectLighting 0` removing the
+line while an interior point light stays contained is the signature that identifies it.

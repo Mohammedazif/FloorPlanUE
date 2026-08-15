@@ -83,6 +83,10 @@ struct FLOORPLANUNREAL_API FFloorPlanImportResult
     UPROPERTY(BlueprintReadOnly, Category = "Floor Plan")
     int32 BakedMeshes = 0;
 
+    /// Directional lights whose contact shadow trace the import switched on.
+    UPROPERTY(BlueprintReadOnly, Category = "Floor Plan")
+    int32 ContactShadowLightsChanged = 0;
+
     /// Pairs of spaces separated by wall material, counting the outside as one space.
     UPROPERTY(BlueprintReadOnly, Category = "Floor Plan")
     int32 AdjacencyLinks = 0;

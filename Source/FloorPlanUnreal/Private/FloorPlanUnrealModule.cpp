@@ -68,6 +68,13 @@ namespace
                     Result.AdjacencyLinks, Result.TraversableLinks, Result.VerticalLinks);
         Output.Logf(ELogVerbosity::Display, TEXT("Also placed %d column(s) and %d fixture(s)."),
                     Result.ColumnCount, Result.FixtureCount);
+        if (Result.ContactShadowLightsChanged > 0)
+        {
+            Output.Logf(ELogVerbosity::Display,
+                        TEXT("Enabled contact shadows on %d directional light(s) so sealed "
+                             "interiors shade cleanly (bEnsureSunContactShadows opts out)."),
+                        Result.ContactShadowLightsChanged);
+        }
         if (Result.ContradictedDimensions > 0)
         {
             Output.Logf(ELogVerbosity::Warning,

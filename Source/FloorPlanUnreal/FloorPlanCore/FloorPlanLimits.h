@@ -84,4 +84,6 @@ namespace FloorPlan::Limits
     inline constexpr double FloorSlabThicknessMm = 200.0;
     inline constexpr double SolidEmbedMm = 15.0;
     static_assert(SolidEmbedMm + SolidEmbedMm < MinWallThicknessMm);
+
+    inline constexpr double SunContactShadowScreenFraction = 0.05;
 }

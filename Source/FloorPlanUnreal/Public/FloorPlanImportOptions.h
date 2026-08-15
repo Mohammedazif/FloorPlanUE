@@ -50,6 +50,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Geometry")
     bool bCutOpenings = true;
 
+    /// Without the sun's contact trace, sealed interiors seam-glow; UNREAL.md explains.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lighting")
+    bool bEnsureSunContactShadows = true;
+
     /// UVs are one unit per metre, so a tiling material keeps its scale on every element.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
     TObjectPtr<UMaterialInterface> WallMaterial;
