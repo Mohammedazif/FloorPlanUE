@@ -291,7 +291,7 @@ bool FFloorPlanMeshBuilder::BuildFloor(const TArray<FVector2D>& BoundaryMm, doub
     {
         return false;
     }
-    AppendWallEmbed(Mesh, BoundaryMm, -ThicknessMm, 0.0, Report);
+    AppendWallEmbed(Mesh, BoundaryMm, -ThicknessMm + FloorPlan::Limits::SolidEmbedMm, 0.0, Report);
     FFloorPlanMeshUVs::Project(Mesh, FFloorPlanSweptArc{});
     Report.OpenBoundaryEdges = FFloorPlanSolid::CountOpenBoundaryEdges(Mesh);
     return true;

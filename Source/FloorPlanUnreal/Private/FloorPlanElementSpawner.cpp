@@ -247,10 +247,10 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         ++Report.Rooms;
     }
 
-    // Walls finish flush with the roof they carry, and otherwise reach into the storey stacked on
-    // them, so no wall top is a coincident face for the sun's shadow test to slip through.
+    // A wall carrying a roof stops just under its top face, so the roof buries the wall top
+    // rather than finishing flush with it.
     const bool bCarriesRoof = Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty();
-    const double WallTopExtensionMm = bCarriesRoof ? FloorSlabThicknessMm : SolidEmbedMm;
+    const double WallTopExtensionMm = bCarriesRoof ? FloorSlabThicknessMm - SolidEmbedMm : 0.0;
 
     for (std::size_t Index = 0; Index < Model.Walls.size(); ++Index)
     {
