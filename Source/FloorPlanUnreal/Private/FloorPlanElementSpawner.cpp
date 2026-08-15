@@ -246,6 +246,10 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         ++Report.Rooms;
     }
 
+    // A wall top flush with the roof slab leaves no seam for the sun's shadow test to slip through.
+    const double WallTopExtensionMm =
+        Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty() ? FloorSlabThicknessMm : 0.0;
+
     for (std::size_t Index = 0; Index < Model.Walls.size(); ++Index)
     {
         const FloorPlan::Model::Wall& Wall = Model.Walls[Index];
@@ -254,7 +258,7 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         Shape.EndMm = FVector2D(Wall.End.X * Scale, Wall.End.Y * Scale);
         Shape.Bulge = Wall.Bulge;
         Shape.ThicknessMm = Wall.ThicknessMm * Scale;
-        Shape.HeightMm = Wall.HeightMm;
+        Shape.HeightMm = Wall.HeightMm + WallTopExtensionMm;
         Shape.BaseMm = Options.bGenerateFloors ? -FloorSlabThicknessMm : 0.0;
         if (Options.bCutOpenings)
         {

@@ -481,7 +481,9 @@ If you see that, the attribute set is missing — check `CopyToDynamicMesh`.
   actor reports `OpeningCount` 0 rather than placing the hole wrongly. No test file has one.
 - **Furniture is placed, not modelled.** A fixture actor is an empty transform with a name.
 - **Roofs are flat slabs.** The `roof` flag caps each room of the topmost storey with a
-  slab; there are no pitched roofs, eaves or parapets. Stairs are built, but nothing else
+  slab and raises that storey's walls to finish flush with the slab's top, so no sunlit
+  ledge or open seam remains at the ceiling; there are no pitched roofs, eaves or
+  parapets. Stairs are built, but nothing else
   joins storeys: no ramps, no escalators, and a lift shaft is linked as data without a car
   in it.
 - **Only straight flights.** A dog-leg or a spiral stair is built as one straight run across
