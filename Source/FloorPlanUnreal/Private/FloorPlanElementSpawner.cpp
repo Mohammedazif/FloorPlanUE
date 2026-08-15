@@ -21,6 +21,7 @@ namespace
 {
     constexpr double FloorSlabThicknessMm = FloorPlan::Limits::FloorSlabThicknessMm;
     constexpr double SolidEmbedMm = FloorPlan::Limits::SolidEmbedMm;
+    constexpr double ShadowBlockerMarginMm = FloorPlan::Limits::ShadowBlockerMarginMm;
     constexpr double MillimetreToUnreal = FFloorPlanMeshBuilder::MillimetreToUnreal;
 
     FString ToUnreal(const std::string& Text)
@@ -127,6 +128,36 @@ namespace
         return false;
     }
 
+    bool IsRoomLoop(const BuildingModel& Model, std::size_t LoopIndex)
+    {
+        for (const FloorPlan::Model::Room& Room : Model.Rooms)
+        {
+            if (Room.LoopIndex == LoopIndex)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    const FloorPlan::Model::Room* FirstRoomInside(const BuildingModel& Model,
+                                                  const FloorPlan::Geometry::Loop& Candidate)
+    {
+        for (const FloorPlan::Model::Room& Room : Model.Rooms)
+        {
+            if (Room.LoopIndex >= Model.Loops.size())
+            {
+                continue;
+            }
+            const auto& Points = Model.Loops[Room.LoopIndex].Tessellated();
+            if (!Points.empty() && Candidate.Contains(Points.front()))
+            {
+                return &Room;
+            }
+        }
+        return nullptr;
+    }
+
     void SpawnRoofs(UWorld& World, const BuildingModel& Model,
                     const UFloorPlanImportOptions& Options, const FString& AssetFolder,
                     AFloorPlanStoreyActor& Storey, const FVector& Lift,
@@ -137,12 +168,63 @@ namespace
             Lift + FVector(0.0, 0.0,
                            (Options.WallHeightMm + FloorSlabThicknessMm) * MillimetreToUnreal);
 
-        for (const FloorPlan::Model::Room& Room : Model.Rooms)
+        struct FRoofSpan
+        {
+            std::size_t LoopIndex = 0;
+            std::string Id;
+        };
+
+        // The roof spans the building outline so it bears on the wall tops, the way a flat
+        // roof does; room-sized roofs would leave the wall heads as sunlit ledges.
+        std::vector<FRoofSpan> Envelopes;
+        for (std::size_t Index = 0; Index < Model.Loops.size(); ++Index)
+        {
+            if (IsRoomLoop(Model, Index))
+            {
+                continue;
+            }
+            const FloorPlan::Model::Room* Inside =
+                FirstRoomInside(Model, Model.Loops[Index]);
+            if (Inside != nullptr)
+            {
+                Envelopes.push_back({Index, Inside->Id});
+            }
+        }
+
+        std::vector<FRoofSpan> Spans;
+        for (const FRoofSpan& Candidate : Envelopes)
+        {
+            const auto& Points = Model.Loops[Candidate.LoopIndex].Tessellated();
+            bool bNested = false;
+            for (const FRoofSpan& Other : Envelopes)
+            {
+                if (&Other != &Candidate && !Points.empty() &&
+                    Model.Loops[Other.LoopIndex].Contains(Points.front()))
+                {
+                    bNested = true;
+                    break;
+                }
+            }
+            if (!bNested)
+            {
+                Spans.push_back(Candidate);
+            }
+        }
+        // Single-line plans carry no envelope outline; their rooms are capped one by one.
+        if (Spans.empty())
+        {
+            for (const FloorPlan::Model::Room& Room : Model.Rooms)
+            {
+                Spans.push_back({Room.LoopIndex, Room.Id});
+            }
+        }
+
+        for (const FRoofSpan& Span : Spans)
         {
             TArray<FVector2D> Boundary;
-            if (Room.LoopIndex < Model.Loops.size())
+            if (Span.LoopIndex < Model.Loops.size())
             {
-                for (const auto& Point : Model.Loops[Room.LoopIndex].Tessellated())
+                for (const auto& Point : Model.Loops[Span.LoopIndex].Tessellated())
                 {
                     Boundary.Add(FVector2D(Point.X * Scale, Point.Y * Scale));
                 }
@@ -164,7 +246,7 @@ namespace
             {
                 continue;
             }
-            Actor->ElementId = ToUnreal(Room.Id);
+            Actor->ElementId = ToUnreal(Span.Id);
             Actor->StoreyName = Storey.StoreyName;
 #if WITH_EDITOR
             Actor->SetActorLabel(FString::Printf(TEXT("Roof_%s"), *Actor->ElementId.Left(8)));
@@ -247,20 +329,29 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         ++Report.Rooms;
     }
 
-    // A wall carrying a roof stops just under its top face, so the roof buries the wall top
-    // rather than finishing flush with it.
+    // The slab or roof above buries each wall top instead of meeting it edge to edge.
     const bool bCarriesRoof = Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty();
-    const double WallTopExtensionMm = bCarriesRoof ? FloorSlabThicknessMm - SolidEmbedMm : 0.0;
+    const bool bSlabAbove = !Rise.ArrivesAtStorey.IsEmpty() && Options.bGenerateFloors;
 
     for (std::size_t Index = 0; Index < Model.Walls.size(); ++Index)
     {
         const FloorPlan::Model::Wall& Wall = Model.Walls[Index];
+        double TopExtensionMm = 0.0;
+        if (bCarriesRoof)
+        {
+            TopExtensionMm = FloorSlabThicknessMm - SolidEmbedMm;
+        }
+        else if (bSlabAbove)
+        {
+            TopExtensionMm = FMath::Max(0.0, Rise.RiseMm - SolidEmbedMm - Wall.HeightMm);
+        }
+
         FFloorPlanWallShape Shape;
         Shape.StartMm = FVector2D(Wall.Start.X * Scale, Wall.Start.Y * Scale);
         Shape.EndMm = FVector2D(Wall.End.X * Scale, Wall.End.Y * Scale);
         Shape.Bulge = Wall.Bulge;
         Shape.ThicknessMm = Wall.ThicknessMm * Scale;
-        Shape.HeightMm = Wall.HeightMm + WallTopExtensionMm;
+        Shape.HeightMm = Wall.HeightMm + TopExtensionMm;
         Shape.BaseMm = Options.bGenerateFloors ? -FloorSlabThicknessMm : 0.0;
         if (Options.bCutOpenings)
         {
@@ -299,6 +390,44 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
             if (MeshReport.OpenBoundaryEdges > 0)
             {
                 ++Report.UnsealedMeshes;
+            }
+            if (Options.bGenerateShadowBlockers && Options.bBakeToStaticMesh)
+            {
+                FFloorPlanWallShape Blocker = Shape;
+                Blocker.ThicknessMm += ShadowBlockerMarginMm + ShadowBlockerMarginMm;
+                Blocker.HeightMm += ShadowBlockerMarginMm;
+                Blocker.BaseMm -= ShadowBlockerMarginMm;
+                if (Blocker.Bulge == 0.0)
+                {
+                    const FVector2D BlockerSpan = Blocker.EndMm - Blocker.StartMm;
+                    const double BlockerLength = BlockerSpan.Size();
+                    if (BlockerLength > 0.0)
+                    {
+                        const FVector2D Along =
+                            BlockerSpan * (ShadowBlockerMarginMm / BlockerLength);
+                        Blocker.StartMm -= Along;
+                        Blocker.EndMm += Along;
+                        // The along-frame origin moved back by the margin with the new start.
+                        for (FFloorPlanOpeningCut& Cut : Blocker.Openings)
+                        {
+                            Cut.AlongEndMm += ShadowBlockerMarginMm + ShadowBlockerMarginMm;
+                            Cut.SillMm -= ShadowBlockerMarginMm;
+                            Cut.HeadMm += ShadowBlockerMarginMm;
+                        }
+                    }
+                }
+
+                FDynamicMesh3 BlockerMesh;
+                FFloorPlanMeshReport BlockerReport;
+                FTransform BlockerPlacement = FTransform::Identity;
+                if (FFloorPlanMeshBuilder::BuildWall(Blocker, BlockerMesh, BlockerPlacement,
+                                                     BlockerReport))
+                {
+                    FFloorPlanMeshPlacer::PlaceHiddenCaster(
+                        Options, AssetFolder,
+                        FString::Printf(TEXT("Wall_%s_Shadow"), *Actor->ElementId.Left(8)),
+                        BlockerMesh, Actor);
+                }
             }
         }
 

@@ -61,3 +61,28 @@ bool FFloorPlanMeshPlacer::Place(const UFloorPlanImportOptions& Options,
     ApplyMaterial(Component, Material);
     return false;
 }
+
+bool FFloorPlanMeshPlacer::PlaceHiddenCaster(const UFloorPlanImportOptions& Options,
+                                              const FString& AssetFolder,
+                                              const FString& AssetName, const FDynamicMesh3& Mesh,
+                                              ADynamicMeshActor* Actor)
+{
+    if (!Options.bBakeToStaticMesh || Actor == nullptr)
+    {
+        return false;
+    }
+    UStaticMesh* Baked = FFloorPlanStaticMeshBaker::Bake(Mesh, AssetFolder / AssetName,
+                                                         Options.bEnableNanite, nullptr);
+    if (Baked == nullptr)
+    {
+        return false;
+    }
+    UStaticMeshComponent* Component = NewObject<UStaticMeshComponent>(Actor);
+    Component->SetStaticMesh(Baked);
+    Component->SetVisibility(false);
+    Component->bCastHiddenShadow = true;
+    Component->SetupAttachment(Actor->GetRootComponent());
+    Component->RegisterComponent();
+    Actor->AddInstanceComponent(Component);
+    return true;
+}

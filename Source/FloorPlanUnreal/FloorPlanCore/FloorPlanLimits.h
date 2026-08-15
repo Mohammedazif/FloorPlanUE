@@ -86,4 +86,5 @@ namespace FloorPlan::Limits
     static_assert(SolidEmbedMm + SolidEmbedMm < MinWallThicknessMm);
 
     inline constexpr double SunContactShadowScreenFraction = 0.5;
+    inline constexpr double ShadowBlockerMarginMm = 100.0;
 }

@@ -54,6 +54,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lighting")
     bool bEnsureSunContactShadows = true;
 
+    /// Invisible fattened wall copies that only cast shadows, burying the seam-glow zone.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lighting")
+    bool bGenerateShadowBlockers = true;
+
     /// UVs are one unit per metre, so a tiling material keeps its scale on every element.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
     TObjectPtr<UMaterialInterface> WallMaterial;

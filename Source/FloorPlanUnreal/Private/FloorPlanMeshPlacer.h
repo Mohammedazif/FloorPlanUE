@@ -15,4 +15,10 @@ public:
     static bool Place(const UFloorPlanImportOptions& Options, const FString& AssetFolder,
                       const FString& AssetName, UMaterialInterface* Material,
                       const UE::Geometry::FDynamicMesh3& Mesh, ADynamicMeshActor* Actor);
+
+    /// Attaches an invisible mesh that still casts shadows. Baking only; false otherwise.
+    static bool PlaceHiddenCaster(const UFloorPlanImportOptions& Options,
+                                  const FString& AssetFolder, const FString& AssetName,
+                                  const UE::Geometry::FDynamicMesh3& Mesh,
+                                  ADynamicMeshActor* Actor);
 };
