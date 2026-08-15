@@ -370,7 +370,13 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         Shape.Bulge = Wall.Bulge;
         Shape.ThicknessMm = Wall.ThicknessMm * Scale;
         Shape.HeightMm = Wall.HeightMm + TopExtensionMm;
-        Shape.BaseMm = Options.bGenerateFloors ? -FloorSlabThicknessMm : 0.0;
+        // Seated walls rest on the raised wall tops below; a full slab drop coplanes them.
+        double BaseDropMm = 0.0;
+        if (Options.bGenerateFloors)
+        {
+            BaseDropMm = Rise.bSeatedOnStorey ? SolidEmbedMm : FloorSlabThicknessMm;
+        }
+        Shape.BaseMm = -BaseDropMm;
         if (Options.bCutOpenings)
         {
             CollectOpenings(Model, Wall, Shape);

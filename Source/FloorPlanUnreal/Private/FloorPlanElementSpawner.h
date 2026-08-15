@@ -25,11 +25,12 @@ struct FFloorPlanSpawnReport
     TArray<AActor*> Actors;
 };
 
-/// How far a flight has to climb, and what it arrives at.
+/// How far a flight has to climb, what it arrives at, and whether a storey sits below.
 struct FFloorPlanStoreyRise
 {
     double RiseMm = 0.0;
     FString ArrivesAtStorey;
+    bool bSeatedOnStorey = false;
 };
 
 /// Turns a compiled plan into room, wall and stair actors beneath one storey.

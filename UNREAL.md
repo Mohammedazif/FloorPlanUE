@@ -441,6 +441,11 @@ overlap closes both. The visible wall height above the floor is unchanged.
 This applies only when floors are generated. With `bGenerateFloors` off the walls start at
 Z = 0, because there is no slab for them to meet.
 
+The full-depth drop is for the ground storey only. A storey seated on another drops just
+15 mm (`SolidEmbedMm`) into its slab: the band below is already filled by the raised wall
+tops of the storey underneath, and a deeper drop would put two wall faces on the same facade
+plane, which z-fights.
+
 ## UVs
 
 Every generated mesh carries a planar unwrap on UV0 at **one UV unit per metre**, so a tiling

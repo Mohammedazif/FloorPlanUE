@@ -254,6 +254,7 @@ FFloorPlanImportResult UFloorPlanImporter::ImportBuilding(
         // A flight on the top storey has nothing above it, so it climbs to ceiling height.
         FFloorPlanStoreyRise Rise;
         Rise.RiseMm = Options->WallHeightMm;
+        Rise.bSeatedOnStorey = Index > 0;
         if (Index + 1 < Storeys.Num())
         {
             Rise.RiseMm = Storeys[Index + 1].ElevationMm - Plan.ElevationMm;
