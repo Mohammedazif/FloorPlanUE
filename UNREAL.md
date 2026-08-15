@@ -480,14 +480,16 @@ If you see that, the attribute set is missing — check `CopyToDynamicMesh`.
   wall's chord, which is not where the wall is. A curved wall is therefore built solid and its
   actor reports `OpeningCount` 0 rather than placing the hole wrongly. No test file has one.
 - **Furniture is placed, not modelled.** A fixture actor is an empty transform with a name.
-- **Roofs are flat slabs.** The `roof` flag caps the topmost storey with one slab per
-  building outline — the roof oversails the walls and bears on their heads the way a real
-  flat roof does, with the wall tops raised into its underside so no sunlit ledge or open
-  seam remains. A single-line plan has no envelope outline, so its rooms are capped one by
-  one. There are no pitched roofs, eaves or parapets. Non-top storeys get the same burial:
-  their wall tops rise into the slab of the storey above rather than meeting it edge to
-  edge. Stairs are built, but nothing else joins storeys: no ramps, no escalators, and a
-  lift shaft is linked as data without a car in it.
+- **Roofs are flat slabs with eaves.** The `roof` flag caps the topmost storey with one slab
+  per building outline — 400 mm thick (`RoofSlabThicknessMm`), overhanging the facade by
+  500 mm (`RoofOverhangMm`), bearing on the wall heads with the wall tops raised into its
+  underside. The overhang shades the upper walls and pushes sunlit surfaces away from the
+  ceiling junctions, which is what keeps sealed interiors dark at the seams. A single-line
+  plan has no envelope outline, so its rooms are capped one by one. There are no pitched
+  roofs or parapets. Non-top storeys get the same burial: their wall tops rise into the slab
+  of the storey above rather than meeting it edge to edge. Stairs are built, but nothing
+  else joins storeys: no ramps, no escalators, and a lift shaft is linked as data without a
+  car in it.
 - **Only straight flights.** A dog-leg or a spiral stair is built as one straight run across
   its footprint. The link between storeys is still correct; the geometry is not.
 - **Every storey is a separate DXF.** A single file holding several plans on different layers

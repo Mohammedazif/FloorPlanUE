@@ -87,4 +87,6 @@ namespace FloorPlan::Limits
 
     inline constexpr double SunContactShadowScreenFraction = 0.5;
     inline constexpr double ShadowBlockerMarginMm = 100.0;
+    inline constexpr double RoofSlabThicknessMm = 400.0;
+    inline constexpr double RoofOverhangMm = 500.0;
 }

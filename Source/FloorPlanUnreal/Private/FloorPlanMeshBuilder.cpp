@@ -185,12 +185,12 @@ namespace
         return (Minimum + Maximum) * 0.5;
     }
 
-    /// Straddles every boundary edge so the slab buries itself in the walls instead of stopping
-    /// dead against them, leaving no coincident face for the sun's shadow test to slip through.
-    void AppendWallEmbed(FDynamicMesh3& Mesh, const TArray<FVector2D>& BoundaryMm, double BaseMm,
-                         double TopMm, FFloorPlanMeshReport& Report)
+    /// Straddles every boundary edge by HalfWidthMm so the slab reaches past its outline
+    /// instead of stopping dead against it — a burial skirt or an eaves ring by width.
+    void AppendBoundaryRing(FDynamicMesh3& Mesh, const TArray<FVector2D>& BoundaryMm,
+                            double HalfWidthMm, double BaseMm, double TopMm,
+                            FFloorPlanMeshReport& Report)
     {
-        const double Embed = FloorPlan::Limits::SolidEmbedMm;
         const FVector2D Centre = BoundaryCentre(BoundaryMm);
         const int32 Count = BoundaryMm.Num();
         for (int32 Index = 0; Index < Count; ++Index)
@@ -203,9 +203,9 @@ namespace
             {
                 continue;
             }
-            const FVector2D Overhang = Span * (Embed / Length);
-            FFloorPlanSolid::AppendSegmentBox(Mesh, Start - Overhang, End + Overhang, Embed, BaseMm,
-                                              TopMm, Report);
+            const FVector2D Extension = Span * (HalfWidthMm / Length);
+            FFloorPlanSolid::AppendSegmentBox(Mesh, Start - Extension, End + Extension,
+                                              HalfWidthMm, BaseMm, TopMm, Report);
         }
     }
 }
@@ -291,7 +291,22 @@ bool FFloorPlanMeshBuilder::BuildFloor(const TArray<FVector2D>& BoundaryMm, doub
     {
         return false;
     }
-    AppendWallEmbed(Mesh, BoundaryMm, -ThicknessMm + FloorPlan::Limits::SolidEmbedMm, 0.0, Report);
+    AppendBoundaryRing(Mesh, BoundaryMm, FloorPlan::Limits::SolidEmbedMm,
+                       -ThicknessMm + FloorPlan::Limits::SolidEmbedMm, 0.0, Report);
+    FFloorPlanMeshUVs::Project(Mesh, FFloorPlanSweptArc{});
+    Report.OpenBoundaryEdges = FFloorPlanSolid::CountOpenBoundaryEdges(Mesh);
+    return true;
+}
+
+bool FFloorPlanMeshBuilder::BuildRoof(const TArray<FVector2D>& BoundaryMm, double ThicknessMm,
+                                       double OverhangMm, FDynamicMesh3& Mesh,
+                                       FTransform& OutTransform, FFloorPlanMeshReport& Report)
+{
+    if (!BuildPrism(BoundaryMm, -ThicknessMm, 0.0, Mesh, OutTransform, Report))
+    {
+        return false;
+    }
+    AppendBoundaryRing(Mesh, BoundaryMm, OverhangMm, -ThicknessMm, 0.0, Report);
     FFloorPlanMeshUVs::Project(Mesh, FFloorPlanSweptArc{});
     Report.OpenBoundaryEdges = FFloorPlanSolid::CountOpenBoundaryEdges(Mesh);
     return true;

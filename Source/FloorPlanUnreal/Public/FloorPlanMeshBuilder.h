@@ -60,6 +60,11 @@ public:
                            UE::Geometry::FDynamicMesh3& Mesh, FTransform& OutTransform,
                            FFloorPlanMeshReport& Report);
 
+    /// A slab with an eaves ring reaching OverhangMm past the boundary, capping a building.
+    static bool BuildRoof(const TArray<FVector2D>& BoundaryMm, double ThicknessMm,
+                          double OverhangMm, UE::Geometry::FDynamicMesh3& Mesh,
+                          FTransform& OutTransform, FFloorPlanMeshReport& Report);
+
     /// Straight extrusion of a closed boundary between two heights, local to its centre.
     static bool BuildPrism(const TArray<FVector2D>& BoundaryMm, double BaseMm, double TopMm,
                            UE::Geometry::FDynamicMesh3& Mesh, FTransform& OutTransform,

@@ -22,6 +22,8 @@ namespace
     constexpr double FloorSlabThicknessMm = FloorPlan::Limits::FloorSlabThicknessMm;
     constexpr double SolidEmbedMm = FloorPlan::Limits::SolidEmbedMm;
     constexpr double ShadowBlockerMarginMm = FloorPlan::Limits::ShadowBlockerMarginMm;
+    constexpr double RoofSlabThicknessMm = FloorPlan::Limits::RoofSlabThicknessMm;
+    constexpr double RoofOverhangMm = FloorPlan::Limits::RoofOverhangMm;
     constexpr double MillimetreToUnreal = FFloorPlanMeshBuilder::MillimetreToUnreal;
 
     FString ToUnreal(const std::string& Text)
@@ -166,7 +168,7 @@ namespace
         const double Scale = Model.MillimetresPerUnit;
         const FVector RoofLift =
             Lift + FVector(0.0, 0.0,
-                           (Options.WallHeightMm + FloorSlabThicknessMm) * MillimetreToUnreal);
+                           (Options.WallHeightMm + RoofSlabThicknessMm) * MillimetreToUnreal);
 
         struct FRoofSpan
         {
@@ -234,8 +236,8 @@ namespace
             FFloorPlanMeshReport MeshReport;
             FTransform Placement = FTransform::Identity;
             if (Boundary.Num() < 3 ||
-                !FFloorPlanMeshBuilder::BuildFloor(Boundary, FloorSlabThicknessMm, Mesh,
-                                                   Placement, MeshReport))
+                !FFloorPlanMeshBuilder::BuildRoof(Boundary, RoofSlabThicknessMm, RoofOverhangMm,
+                                                  Mesh, Placement, MeshReport))
             {
                 continue;
             }
@@ -339,7 +341,7 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         double TopExtensionMm = 0.0;
         if (bCarriesRoof)
         {
-            TopExtensionMm = FloorSlabThicknessMm - SolidEmbedMm;
+            TopExtensionMm = RoofSlabThicknessMm - SolidEmbedMm;
         }
         else if (bSlabAbove)
         {
