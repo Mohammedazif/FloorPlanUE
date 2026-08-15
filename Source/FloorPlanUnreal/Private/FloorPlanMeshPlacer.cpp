@@ -33,7 +33,11 @@ namespace
         Component->SetupAttachment(Actor->GetRootComponent());
         Component->RegisterComponent();
         Actor->AddInstanceComponent(Component);
-        ApplyMaterial(Component, Material);
+        // An override would hide asset edits; set one only when the bake swapped the slot.
+        if (Material != nullptr && Material != Baked->GetMaterial(0))
+        {
+            ApplyMaterial(Component, Material);
+        }
         if (UDynamicMeshComponent* Dynamic = Actor->GetDynamicMeshComponent())
         {
             Dynamic->SetVisibility(false);

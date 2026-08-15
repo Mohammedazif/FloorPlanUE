@@ -425,6 +425,12 @@ Things worth knowing:
 The actor keeps its `UDynamicMeshComponent` as its root — it is what `ADynamicMeshActor`
 provides — but it is emptied and hidden, and the static mesh component is attached beneath it.
 
+The material lives on the baked asset, not as a component override, so editing the asset's
+material changes the placed actor too, and the actor's static mesh component slot stays free
+for a per-actor override. The one exception: a translucent import material is swapped on the
+asset for a distance-field-safe one (the DF builder drops translucent-slot triangles), and
+only then does the component carry the real material as an override.
+
 ## Walls sit *into* the slab, not on it
 
 The floor slab occupies Z from 0 down to −200 mm. Walls run from the same −200 mm up to the
