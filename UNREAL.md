@@ -73,9 +73,11 @@ FloorPlan.Import <path.dxf> [WallLayer|*] [MmPerUnit] [single|double]
 Pass `*` for the layer to accept every layer. Pass `0` for `MmPerUnit` to keep what the file
 declares.
 
-Three flags may appear **anywhere** in the line, in any order, because they are flags rather
+Five flags may appear **anywhere** in the line, in any order, because they are flags rather
 than positions: `bake` writes static mesh assets instead of dynamic meshes, `roof` caps the
-topmost storey with a slab, and `json=<path>` dumps the whole model to a file.
+topmost storey with a slab, `wallmat=<asset>` and `floormat=<asset>` pick the materials the
+building imports with (an asset path like `/Game/Materials/M_Brick`; floors, roofs and stairs
+use the floor material), and `json=<path>` dumps the whole model to a file.
 `FloorPlan.Import plan.dxf bake` is enough on its own.
 
 Use `roof` whenever you light the building with a sun. Without it the building is open to the

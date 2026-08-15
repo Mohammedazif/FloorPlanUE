@@ -1,6 +1,8 @@
 #include "Engine/World.h"
 #include "FloorPlanImporter.h"
 #include "HAL/IConsoleManager.h"
+#include "Materials/MaterialInterface.h"
+#include "Misc/PackageName.h"
 #include "Modules/ModuleManager.h"
 
 IMPLEMENT_MODULE(FDefaultModuleImpl, FloorPlanUnreal)
@@ -9,15 +11,30 @@ namespace
 {
     const TCHAR* ImportUsage =
         TEXT("Usage: FloorPlan.Import <path.dxf> [WallLayer|*] [MmPerUnit] [single|double], "
-             "plus bake, roof and/or json=<path> anywhere");
+             "plus bake, roof, wallmat=<asset>, floormat=<asset> and/or json=<path> anywhere");
 
     const TCHAR* BuildingUsage =
         TEXT("Usage: FloorPlan.ImportBuilding <name>=<path.dxf>@<elevationMm> ... , plus bake, "
-             "roof and/or json=<path> anywhere");
+             "roof, wallmat=<asset>, floormat=<asset> and/or json=<path> anywhere");
+
+    UMaterialInterface* LoadMaterialFlag(const FString& Path, FOutputDevice& Output)
+    {
+        FString ObjectPath = Path;
+        if (!ObjectPath.Contains(TEXT(".")))
+        {
+            ObjectPath += TEXT(".") + FPackageName::GetShortName(ObjectPath);
+        }
+        UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, *ObjectPath);
+        if (Material == nullptr)
+        {
+            Output.Logf(ELogVerbosity::Warning, TEXT("Material not found: %s"), *Path);
+        }
+        return Material;
+    }
 
     /// Pulls the flags that may appear in any position, leaving the ordered settings behind.
     TArray<FString> TakeFlags(const TArray<FString>& Args, int32 First,
-                              UFloorPlanImportOptions& Options)
+                              UFloorPlanImportOptions& Options, FOutputDevice& Output)
     {
         TArray<FString> Settings;
         for (int32 Index = First; Index < Args.Num(); ++Index)
@@ -35,6 +52,16 @@ namespace
             if (Args[Index].StartsWith(TEXT("json="), ESearchCase::IgnoreCase))
             {
                 Options.DataExportPath = Args[Index].RightChop(5);
+                continue;
+            }
+            if (Args[Index].StartsWith(TEXT("wallmat="), ESearchCase::IgnoreCase))
+            {
+                Options.WallMaterial = LoadMaterialFlag(Args[Index].RightChop(8), Output);
+                continue;
+            }
+            if (Args[Index].StartsWith(TEXT("floormat="), ESearchCase::IgnoreCase))
+            {
+                Options.FloorMaterial = LoadMaterialFlag(Args[Index].RightChop(9), Output);
                 continue;
             }
             Settings.Add(Args[Index]);
@@ -111,7 +138,7 @@ namespace
         }
 
         UFloorPlanImportOptions* Options = NewObject<UFloorPlanImportOptions>();
-        const TArray<FString> Settings = TakeFlags(Args, 1, *Options);
+        const TArray<FString> Settings = TakeFlags(Args, 1, *Options, Output);
 
         if (Settings.Num() >= 1 && Settings[0] != TEXT("*"))
         {
@@ -167,7 +194,7 @@ namespace
         }
 
         UFloorPlanImportOptions* Options = NewObject<UFloorPlanImportOptions>();
-        const TArray<FString> Settings = TakeFlags(Args, 0, *Options);
+        const TArray<FString> Settings = TakeFlags(Args, 0, *Options, Output);
 
         TArray<FFloorPlanStorey> Storeys;
         for (const FString& Argument : Settings)
