@@ -134,8 +134,7 @@ namespace
         const double Scale = Model.MillimetresPerUnit;
         const FVector RoofLift =
             Lift + FVector(0.0, 0.0,
-                           (Options.WallHeightMm + FloorPlan::Limits::FloorSlabThicknessMm) *
-                               MillimetreToUnreal);
+                           (Options.WallHeightMm + FloorSlabThicknessMm) * MillimetreToUnreal);
 
         for (const FloorPlan::Model::Room& Room : Model.Rooms)
         {
@@ -302,8 +301,7 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         ++Report.Walls;
     }
 
-    // Lower storeys are already capped by the floor slab of the storey standing on them.
-    if (Options.bGenerateRoof && Rise.RiseMm <= 0.0)
+    if (Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty())
     {
         SpawnRoofs(World, Model, Options, AssetFolder, Storey, Lift, AttachRules, Report);
     }
