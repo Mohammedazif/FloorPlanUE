@@ -507,9 +507,12 @@ occluder, and auto exposure, balancing a dim interior against a 75,000-lux sun, 
 sliver of missed occlusion by orders of magnitude until it reads as a glowing seam.
 
 The cure is the screen-space contact trace, which exists for exactly this range and works
-under every shadow method: on the directional light, **Contact Shadow Length = 0.05** (leave
-*Contact Shadow Length in World Space Units* off; raise to 0.1 if a trace of the line
-survives). **The importer applies this itself**: after spawning, it switches the trace on for
+under every shadow method: on the directional light, **Contact Shadow Length = 0.5** (leave
+*Contact Shadow Length in World Space Units* off). Half a screen of trace is what fully
+extinguishes the seam in interiors; if the same light also covers content where so long a
+march shows streaking or costs too much, 0.05–0.1 removes most of the line for a fraction of
+the price — the value lives in `FloorPlanLimits.h` as `SunContactShadowScreenFraction`.
+**The importer applies this itself**: after spawning, it switches the trace on for
 every directional light in the level whose contact length is zero, and reports having done so.
 A light with any contact length already set is left alone, and
 `bEnsureSunContactShadows = false` on the import options disables the behaviour entirely.
