@@ -73,9 +73,15 @@ FloorPlan.Import <path.dxf> [WallLayer|*] [MmPerUnit] [single|double]
 Pass `*` for the layer to accept every layer. Pass `0` for `MmPerUnit` to keep what the file
 declares.
 
-Two flags may appear **anywhere** in the line, in any order, because they are flags rather than
-positions: `bake` writes static mesh assets instead of dynamic meshes, and `json=<path>` dumps
-the whole model to a file. `FloorPlan.Import plan.dxf bake` is enough on its own.
+Three flags may appear **anywhere** in the line, in any order, because they are flags rather
+than positions: `bake` writes static mesh assets instead of dynamic meshes, `roof` caps the
+topmost storey with a slab, and `json=<path>` dumps the whole model to a file.
+`FloorPlan.Import plan.dxf bake` is enough on its own.
+
+Use `roof` whenever you light the building with a sun. Without it the building is open to the
+sky: the sun floods the top storey and turns every wall top into a brilliantly lit ledge, which
+rims the inside faces with light along their top edges and feeds daylight into the storey
+joints. A capped building keeps the sun outside, which is what interior lighting expects.
 
 Actors appear in the level immediately; the log prints storey, room and wall counts, total
 area, the adjacency summary, and any label that belonged to no room.
@@ -474,8 +480,10 @@ If you see that, the attribute set is missing — check `CopyToDynamicMesh`.
   wall's chord, which is not where the wall is. A curved wall is therefore built solid and its
   actor reports `OpeningCount` 0 rather than placing the hole wrongly. No test file has one.
 - **Furniture is placed, not modelled.** A fixture actor is an empty transform with a name.
-- **No roofs.** Stairs are built, but nothing else joins storeys: no ramps,
-  no escalators, and a lift shaft is linked as data without a car in it.
+- **Roofs are flat slabs.** The `roof` flag caps each room of the topmost storey with a
+  slab; there are no pitched roofs, eaves or parapets. Stairs are built, but nothing else
+  joins storeys: no ramps, no escalators, and a lift shaft is linked as data without a car
+  in it.
 - **Only straight flights.** A dog-leg or a spiral stair is built as one straight run across
   its footprint. The link between storeys is still correct; the geometry is not.
 - **Every storey is a separate DXF.** A single file holding several plans on different layers

@@ -125,6 +125,60 @@ namespace
         }
         return false;
     }
+
+    void SpawnRoofs(UWorld& World, const BuildingModel& Model,
+                    const UFloorPlanImportOptions& Options, const FString& AssetFolder,
+                    AFloorPlanStoreyActor& Storey, const FVector& Lift,
+                    const FAttachmentTransformRules& AttachRules, FFloorPlanSpawnReport& Report)
+    {
+        const double Scale = Model.MillimetresPerUnit;
+        const FVector RoofLift =
+            Lift + FVector(0.0, 0.0,
+                           (Options.WallHeightMm + FloorPlan::Limits::FloorSlabThicknessMm) *
+                               MillimetreToUnreal);
+
+        for (const FloorPlan::Model::Room& Room : Model.Rooms)
+        {
+            TArray<FVector2D> Boundary;
+            if (Room.LoopIndex < Model.Loops.size())
+            {
+                for (const auto& Point : Model.Loops[Room.LoopIndex].Tessellated())
+                {
+                    Boundary.Add(FVector2D(Point.X * Scale, Point.Y * Scale));
+                }
+            }
+
+            FDynamicMesh3 Mesh;
+            FFloorPlanMeshReport MeshReport;
+            FTransform Placement = FTransform::Identity;
+            if (Boundary.Num() < 3 ||
+                !FFloorPlanMeshBuilder::BuildFloor(Boundary, FloorSlabThicknessMm, Mesh,
+                                                   Placement, MeshReport))
+            {
+                continue;
+            }
+
+            AFloorPlanRoofActor* Actor = World.SpawnActor<AFloorPlanRoofActor>(
+                Placement.GetLocation() + RoofLift, Placement.Rotator());
+            if (Actor == nullptr)
+            {
+                continue;
+            }
+            Actor->ElementId = ToUnreal(Room.Id);
+            Actor->StoreyName = Storey.StoreyName;
+#if WITH_EDITOR
+            Actor->SetActorLabel(FString::Printf(TEXT("Roof_%s"), *Actor->ElementId.Left(8)));
+#endif
+            if (FFloorPlanMeshPlacer::Place(Options, AssetFolder,
+                          FString::Printf(TEXT("Roof_%s"), *Actor->ElementId.Left(8)),
+                          Options.FloorMaterial, Mesh, Actor))
+            {
+                ++Report.BakedMeshes;
+            }
+            Actor->AttachToActor(&Storey, AttachRules);
+            Report.Actors.Add(Actor);
+        }
+    }
 }
 
 void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
@@ -246,6 +300,12 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         Actor->AttachToActor(&Storey, AttachRules);
         Report.Actors.Add(Actor);
         ++Report.Walls;
+    }
+
+    // Lower storeys are already capped by the floor slab of the storey standing on them.
+    if (Options.bGenerateRoof && Rise.RiseMm <= 0.0)
+    {
+        SpawnRoofs(World, Model, Options, AssetFolder, Storey, Lift, AttachRules, Report);
     }
 
     FFloorPlanFittingSpawner::Spawn(World, Model, Options, AssetFolder, Rise, Storey, Lift,

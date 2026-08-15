@@ -43,6 +43,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Geometry")
     bool bGenerateFloors = true;
 
+    /// Caps the topmost storey with a slab; an open-top building has the sun inside it.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Geometry")
+    bool bGenerateRoof = false;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Geometry")
     bool bCutOpenings = true;
 

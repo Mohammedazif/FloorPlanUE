@@ -38,6 +38,11 @@ FString AFloorPlanRoomActor::Describe() const
                            *ElementId);
 }
 
+FString AFloorPlanRoofActor::Describe() const
+{
+    return FString::Printf(TEXT("Roof over %s - %s"), *StoreyName, *ElementId);
+}
+
 FString AFloorPlanColumnActor::Describe() const
 {
     return FString::Printf(TEXT("Column %.0f x %.0f mm - %s"), WidthMm, DepthMm, *ElementId);

@@ -121,6 +121,23 @@ public:
     FString Describe() const;
 };
 
+/// The slab capping a room of the topmost storey, so the sun stays outside the building.
+UCLASS(BlueprintType)
+class FLOORPLANUNREAL_API AFloorPlanRoofActor : public ADynamicMeshActor
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
+    FString ElementId;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
+    FString StoreyName;
+
+    UFUNCTION(BlueprintCallable, Category = "Floor Plan")
+    FString Describe() const;
+};
+
 /// A structural column, extruded from the profile it was drawn as.
 UCLASS(BlueprintType)
 class FLOORPLANUNREAL_API AFloorPlanColumnActor : public ADynamicMeshActor
