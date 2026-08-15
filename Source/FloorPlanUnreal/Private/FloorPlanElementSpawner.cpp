@@ -235,9 +235,10 @@ namespace
             FDynamicMesh3 Mesh;
             FFloorPlanMeshReport MeshReport;
             FTransform Placement = FTransform::Identity;
+            // The visible roof stays flush with the facade; its shadow copy carries the eaves.
             if (Boundary.Num() < 3 ||
-                !FFloorPlanMeshBuilder::BuildRoof(Boundary, RoofSlabThicknessMm, RoofOverhangMm,
-                                                  Mesh, Placement, MeshReport))
+                !FFloorPlanMeshBuilder::BuildRoof(Boundary, RoofSlabThicknessMm, 0.0, Mesh,
+                                                  Placement, MeshReport))
             {
                 continue;
             }
@@ -258,6 +259,21 @@ namespace
                           Options.FloorMaterial, Mesh, Actor))
             {
                 ++Report.BakedMeshes;
+            }
+            if (Options.bGenerateShadowBlockers && Options.bBakeToStaticMesh)
+            {
+                FDynamicMesh3 BlockerMesh;
+                FFloorPlanMeshReport BlockerReport;
+                FTransform BlockerPlacement = FTransform::Identity;
+                if (FFloorPlanMeshBuilder::BuildRoof(Boundary, RoofSlabThicknessMm,
+                                                     RoofOverhangMm, BlockerMesh,
+                                                     BlockerPlacement, BlockerReport))
+                {
+                    FFloorPlanMeshPlacer::PlaceHiddenCaster(
+                        Options, AssetFolder,
+                        FString::Printf(TEXT("Roof_%s_Shadow"), *Actor->ElementId.Left(8)),
+                        BlockerMesh, Actor);
+                }
             }
             Actor->AttachToActor(&Storey, AttachRules);
             Report.Actors.Add(Actor);
