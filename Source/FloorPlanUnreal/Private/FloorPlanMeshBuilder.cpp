@@ -306,7 +306,9 @@ bool FFloorPlanMeshBuilder::BuildRoof(const TArray<FVector2D>& BoundaryMm, doubl
     {
         return false;
     }
-    AppendBoundaryRing(Mesh, BoundaryMm, OverhangMm, -ThicknessMm, 0.0, Report);
+    // Ring top sits an embed below the cap so its inner straddle never coplanes with it.
+    AppendBoundaryRing(Mesh, BoundaryMm, OverhangMm, -ThicknessMm,
+                       -FloorPlan::Limits::SolidEmbedMm, Report);
     FFloorPlanMeshUVs::Project(Mesh, FFloorPlanSweptArc{});
     Report.OpenBoundaryEdges = FFloorPlanSolid::CountOpenBoundaryEdges(Mesh);
     return true;

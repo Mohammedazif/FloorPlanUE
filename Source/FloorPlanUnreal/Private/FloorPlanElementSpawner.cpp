@@ -235,10 +235,10 @@ namespace
             FDynamicMesh3 Mesh;
             FFloorPlanMeshReport MeshReport;
             FTransform Placement = FTransform::Identity;
-            // The visible roof stays flush with the facade; its shadow copy carries the eaves.
+            // The rim lips an embed past the buried wall tops; flush would z-fight their plane.
             if (Boundary.Num() < 3 ||
-                !FFloorPlanMeshBuilder::BuildRoof(Boundary, RoofSlabThicknessMm, 0.0, Mesh,
-                                                  Placement, MeshReport))
+                !FFloorPlanMeshBuilder::BuildRoof(Boundary, RoofSlabThicknessMm, SolidEmbedMm,
+                                                  Mesh, Placement, MeshReport))
             {
                 continue;
             }
@@ -413,7 +413,11 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
             {
                 FFloorPlanWallShape Blocker = Shape;
                 Blocker.ThicknessMm += ShadowBlockerMarginMm + ShadowBlockerMarginMm;
-                Blocker.HeightMm += ShadowBlockerMarginMm;
+                // A roof or slab above buries the top; extending further would ridge past it.
+                if (!bCarriesRoof && !bSlabAbove)
+                {
+                    Blocker.HeightMm += ShadowBlockerMarginMm;
+                }
                 Blocker.BaseMm -= ShadowBlockerMarginMm;
                 if (Blocker.Bulge == 0.0)
                 {

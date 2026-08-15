@@ -481,8 +481,10 @@ If you see that, the attribute set is missing — check `CopyToDynamicMesh`.
   actor reports `OpeningCount` 0 rather than placing the hole wrongly. No test file has one.
 - **Furniture is placed, not modelled.** A fixture actor is an empty transform with a name.
 - **Roofs are flat slabs.** The `roof` flag caps the topmost storey with one slab per
-  building outline — 400 mm thick (`RoofSlabThicknessMm`), flush with the facade, bearing
-  on the wall heads with the wall tops raised into its underside. When baking, the roof also
+  building outline — 400 mm thick (`RoofSlabThicknessMm`), bearing on the wall heads with
+  the wall tops raised into its underside. The rim lips 15 mm (`SolidEmbedMm`) past the
+  facade: visually flush, but without the lip the raised wall tops would share the rim's
+  plane and z-fight. When baking, the roof also
   carries an invisible shadow copy with 500 mm eaves (`RoofOverhangMm`): the overhang shades
   the upper walls and pushes sunlit surfaces away from the ceiling junctions — which keeps
   sealed interiors dark at the seams — without protruding visibly. A single-line
