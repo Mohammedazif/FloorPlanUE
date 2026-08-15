@@ -20,6 +20,7 @@ using UE::Geometry::FDynamicMesh3;
 namespace
 {
     constexpr double FloorSlabThicknessMm = FloorPlan::Limits::FloorSlabThicknessMm;
+    constexpr double SolidEmbedMm = FloorPlan::Limits::SolidEmbedMm;
     constexpr double MillimetreToUnreal = FFloorPlanMeshBuilder::MillimetreToUnreal;
 
     FString ToUnreal(const std::string& Text)
@@ -246,9 +247,10 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         ++Report.Rooms;
     }
 
-    // A wall top flush with the roof slab leaves no seam for the sun's shadow test to slip through.
-    const double WallTopExtensionMm =
-        Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty() ? FloorSlabThicknessMm : 0.0;
+    // Walls finish flush with the roof they carry, and otherwise reach into the storey stacked on
+    // them, so no wall top is a coincident face for the sun's shadow test to slip through.
+    const bool bCarriesRoof = Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty();
+    const double WallTopExtensionMm = bCarriesRoof ? FloorSlabThicknessMm : SolidEmbedMm;
 
     for (std::size_t Index = 0; Index < Model.Walls.size(); ++Index)
     {

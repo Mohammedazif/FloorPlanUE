@@ -13,6 +13,11 @@ public:
                           double AcrossMin, double AcrossMax, double UpMin, double UpMax,
                           FFloorPlanMeshReport& Report);
 
+    /// The same box turned to run from StartMm to EndMm, straddling that line by HalfWidthMm.
+    static void AppendSegmentBox(UE::Geometry::FDynamicMesh3& Mesh, const FVector2D& StartMm,
+                                 const FVector2D& EndMm, double HalfWidthMm, double UpMin,
+                                 double UpMax, FFloorPlanMeshReport& Report);
+
     /// Callers pass right-handed order, where (B-A)x(C-A) is the outward normal. Unreal's
     /// rasterizer treats the reverse as front-facing, so the swap happens here and only here.
     static void AppendTriangle(UE::Geometry::FDynamicMesh3& Mesh, int32 A, int32 B, int32 C,

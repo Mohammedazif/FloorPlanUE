@@ -82,4 +82,6 @@ namespace FloorPlan::Limits
     inline constexpr double DefaultWindowHeadHeightMm = 2100.0;
     inline constexpr double DefaultWallHeightMm = 2700.0;
     inline constexpr double FloorSlabThicknessMm = 200.0;
+    inline constexpr double SolidEmbedMm = 15.0;
+    static_assert(SolidEmbedMm + SolidEmbedMm < MinWallThicknessMm);
 }

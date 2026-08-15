@@ -170,6 +170,44 @@ namespace
             return A.AlongStartMm < B.AlongStartMm;
         });
     }
+
+    FVector2D BoundaryCentre(const TArray<FVector2D>& BoundaryMm)
+    {
+        FVector2D Minimum = BoundaryMm[0];
+        FVector2D Maximum = BoundaryMm[0];
+        for (const FVector2D& Point : BoundaryMm)
+        {
+            Minimum.X = FMath::Min(Minimum.X, Point.X);
+            Minimum.Y = FMath::Min(Minimum.Y, Point.Y);
+            Maximum.X = FMath::Max(Maximum.X, Point.X);
+            Maximum.Y = FMath::Max(Maximum.Y, Point.Y);
+        }
+        return (Minimum + Maximum) * 0.5;
+    }
+
+    /// Straddles every boundary edge so the slab buries itself in the walls instead of stopping
+    /// dead against them, leaving no coincident face for the sun's shadow test to slip through.
+    void AppendWallEmbed(FDynamicMesh3& Mesh, const TArray<FVector2D>& BoundaryMm, double BaseMm,
+                         double TopMm, FFloorPlanMeshReport& Report)
+    {
+        const double Embed = FloorPlan::Limits::SolidEmbedMm;
+        const FVector2D Centre = BoundaryCentre(BoundaryMm);
+        const int32 Count = BoundaryMm.Num();
+        for (int32 Index = 0; Index < Count; ++Index)
+        {
+            const FVector2D Start = BoundaryMm[Index] - Centre;
+            const FVector2D End = BoundaryMm[(Index + 1) % Count] - Centre;
+            const FVector2D Span = End - Start;
+            const double Length = Span.Size();
+            if (Length < MinimumExtentMm)
+            {
+                continue;
+            }
+            const FVector2D Overhang = Span * (Embed / Length);
+            FFloorPlanSolid::AppendSegmentBox(Mesh, Start - Overhang, End + Overhang, Embed, BaseMm,
+                                              TopMm, Report);
+        }
+    }
 }
 
 bool FFloorPlanMeshBuilder::BuildWall(const FFloorPlanWallShape& Shape, FDynamicMesh3& Mesh,
@@ -249,7 +287,14 @@ bool FFloorPlanMeshBuilder::BuildFloor(const TArray<FVector2D>& BoundaryMm, doub
                                         FDynamicMesh3& Mesh, FTransform& OutTransform,
                                         FFloorPlanMeshReport& Report)
 {
-    return BuildPrism(BoundaryMm, -ThicknessMm, 0.0, Mesh, OutTransform, Report);
+    if (!BuildPrism(BoundaryMm, -ThicknessMm, 0.0, Mesh, OutTransform, Report))
+    {
+        return false;
+    }
+    AppendWallEmbed(Mesh, BoundaryMm, -ThicknessMm, 0.0, Report);
+    FFloorPlanMeshUVs::Project(Mesh, FFloorPlanSweptArc{});
+    Report.OpenBoundaryEdges = FFloorPlanSolid::CountOpenBoundaryEdges(Mesh);
+    return true;
 }
 
 bool FFloorPlanMeshBuilder::BuildPrism(const TArray<FVector2D>& BoundaryMm, double BaseMm,
@@ -269,16 +314,7 @@ bool FFloorPlanMeshBuilder::BuildPrism(const TArray<FVector2D>& BoundaryMm, doub
         return false;
     }
 
-    FVector2D Minimum = BoundaryMm[0];
-    FVector2D Maximum = BoundaryMm[0];
-    for (const FVector2D& Point : BoundaryMm)
-    {
-        Minimum.X = FMath::Min(Minimum.X, Point.X);
-        Minimum.Y = FMath::Min(Minimum.Y, Point.Y);
-        Maximum.X = FMath::Max(Maximum.X, Point.X);
-        Maximum.Y = FMath::Max(Maximum.Y, Point.Y);
-    }
-    const FVector2D Centre = (Minimum + Maximum) * 0.5;
+    const FVector2D Centre = BoundaryCentre(BoundaryMm);
     OutTransform = FTransform(FVector(Centre.X * Scale, Centre.Y * Scale, 0.0));
 
     const int32 Base = Mesh.MaxVertexID();
