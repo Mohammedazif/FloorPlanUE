@@ -435,6 +435,9 @@ This is why the actors are not `ADynamicMeshActor`: that root carries a material
 own, and on a baked import the Details panel bound the Materials row to that hidden, empty
 component, so every material assignment silently went nowhere.
 
+A static mesh actor is Static mobility, and Unreal refuses to attach a static actor to a more
+mobile parent, so the building and storey actors that own the hierarchy are Static too.
+
 Re-importing rewrites each baked asset in place rather than leaving a numbered copy beside it,
 so actors already placed from those meshes pick up the new geometry and keep the materials you
 gave them.

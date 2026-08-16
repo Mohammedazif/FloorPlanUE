@@ -6,6 +6,8 @@ AFloorPlanBuildingActor::AFloorPlanBuildingActor()
 {
     PrimaryActorTick.bCanEverTick = false;
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    // The static element actors below refuse to attach to a more mobile parent than themselves.
+    RootComponent->Mobility = EComponentMobility::Static;
 }
 
 FString AFloorPlanBuildingActor::Describe() const
@@ -20,6 +22,7 @@ AFloorPlanStoreyActor::AFloorPlanStoreyActor()
 {
     PrimaryActorTick.bCanEverTick = false;
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    RootComponent->Mobility = EComponentMobility::Static;
 }
 
 FString AFloorPlanStoreyActor::Describe() const
@@ -34,6 +37,7 @@ AFloorPlanShadowActor::AFloorPlanShadowActor()
 {
     PrimaryActorTick.bCanEverTick = false;
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    RootComponent->Mobility = EComponentMobility::Static;
 }
 
 FString AFloorPlanShadowActor::Describe() const
