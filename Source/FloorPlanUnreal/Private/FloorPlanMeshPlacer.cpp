@@ -3,6 +3,7 @@
 #include "Components/DynamicMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "FloorPlanElementActors.h"
 #include "FloorPlanImportOptions.h"
 #include "FloorPlanMeshBuilder.h"
 #include "FloorPlanStaticMeshBaker.h"
@@ -12,22 +13,14 @@
 
 using UE::Geometry::FDynamicMesh3;
 
-namespace
-{
-    void Attach(AActor& Actor, USceneComponent& Component)
-    {
-        Component.SetupAttachment(Actor.GetRootComponent());
-        Component.RegisterComponent();
-        Actor.AddInstanceComponent(&Component);
-    }
-}
-
 bool FFloorPlanMeshPlacer::Place(const UFloorPlanImportOptions& Options,
                                   const FString& AssetFolder, const FString& AssetName,
                                   UMaterialInterface* Material, const FDynamicMesh3& Mesh,
-                                  AActor* Actor)
+                                  AFloorPlanElementActor* Actor)
 {
-    if (Actor == nullptr)
+    UStaticMeshComponent* MeshComponent =
+        Actor != nullptr ? Actor->GetStaticMeshComponent() : nullptr;
+    if (MeshComponent == nullptr)
     {
         return false;
     }
@@ -37,25 +30,26 @@ bool FFloorPlanMeshPlacer::Place(const UFloorPlanImportOptions& Options,
                                                              Options.bEnableNanite, Material);
         if (Baked != nullptr)
         {
-            UStaticMeshComponent* Component = NewObject<UStaticMeshComponent>(Actor);
-            Component->SetStaticMesh(Baked);
-            Attach(*Actor, *Component);
+            MeshComponent->SetStaticMesh(Baked);
             // An override would hide asset edits; set one only when the bake swapped the slot.
             if (Material != nullptr && Material != Baked->GetMaterial(0))
             {
-                Component->SetMaterial(0, Material);
+                MeshComponent->SetMaterial(0, Material);
             }
             return true;
         }
     }
 
-    UDynamicMeshComponent* Component = NewObject<UDynamicMeshComponent>(Actor);
-    Attach(*Actor, *Component);
-    FFloorPlanMeshBuilder::CopyToDynamicMesh(Mesh, Component->GetDynamicMesh());
-    Component->NotifyMeshUpdated();
+    // With no mesh on the root the actor still shows one material slot, this one.
+    UDynamicMeshComponent* Preview = NewObject<UDynamicMeshComponent>(Actor);
+    Preview->SetupAttachment(MeshComponent);
+    Preview->RegisterComponent();
+    Actor->AddInstanceComponent(Preview);
+    FFloorPlanMeshBuilder::CopyToDynamicMesh(Mesh, Preview->GetDynamicMesh());
+    Preview->NotifyMeshUpdated();
     if (Material != nullptr)
     {
-        Component->SetMaterial(0, Material);
+        Preview->SetMaterial(0, Material);
     }
     return false;
 }
@@ -79,7 +73,9 @@ bool FFloorPlanMeshPlacer::PlaceHiddenCaster(const UFloorPlanImportOptions& Opti
     Component->SetStaticMesh(Baked);
     Component->SetVisibility(false);
     Component->bCastHiddenShadow = true;
-    Attach(*Host, *Component);
+    Component->SetupAttachment(Host->GetRootComponent());
+    Component->RegisterComponent();
     Component->SetWorldTransform(Placement);
+    Host->AddInstanceComponent(Component);
     return true;
 }

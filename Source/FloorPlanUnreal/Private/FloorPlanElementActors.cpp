@@ -42,12 +42,6 @@ FString AFloorPlanShadowActor::Describe() const
                            *StoreyName);
 }
 
-AFloorPlanElementActor::AFloorPlanElementActor()
-{
-    PrimaryActorTick.bCanEverTick = false;
-    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-}
-
 FString AFloorPlanRoomActor::Describe() const
 {
     const FString Label = RoomName.IsEmpty() ? TEXT("Unnamed") : RoomName;

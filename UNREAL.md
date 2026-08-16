@@ -425,11 +425,15 @@ Things worth knowing:
 - **Lightmap UVs are not generated.** UV0 is a real unwrap, so if you want baked lighting turn
   on *Generate Lightmap UVs* in the static mesh editor and it has something sane to work from.
 
-Every element actor is a plain `AActor` with a bare `USceneComponent` root and exactly one
-mesh component beneath it: a `UStaticMeshComponent` when baking, a `UDynamicMeshComponent`
-when not. One mesh component means one material slot, so the Details panel's Materials row is
-never ambiguous — the reason the actors are not `ADynamicMeshActor`, whose root component
-carries a material slot of its own and would swallow the edit.
+Every element actor **is** an `AStaticMeshActor` (`AFloorPlanElementActor` derives from it), so
+a baked wall behaves in the Details panel exactly like a static mesh you dragged in yourself:
+its Static Mesh and Materials sections are the component's own, and changing Element 0 changes
+the wall. Without baking the root simply holds no mesh — reporting no material slots — and a
+`UDynamicMeshComponent` is attached beneath it to preview the geometry.
+
+This is why the actors are not `ADynamicMeshActor`: that root carries a material slot of its
+own, and on a baked import the Details panel bound the Materials row to that hidden, empty
+component, so every material assignment silently went nowhere.
 
 Re-importing rewrites each baked asset in place rather than leaving a numbered copy beside it,
 so actors already placed from those meshes pick up the new geometry and keep the materials you
@@ -506,7 +510,8 @@ If you see that, the attribute set is missing — check `CopyToDynamicMesh`.
 - **Openings are not cut into curved walls.** An opening is positioned by projecting onto the
   wall's chord, which is not where the wall is. A curved wall is therefore built solid and its
   actor reports `OpeningCount` 0 rather than placing the hole wrongly. No test file has one.
-- **Furniture is placed, not modelled.** A fixture actor is an empty transform with a name.
+- **Furniture is placed, not modelled.** A fixture actor is a named static mesh actor with no
+  mesh on it, sitting where the block was drawn: assign your own mesh and it is furnished.
 - **Roofs are flat slabs.** The `roof` flag caps the topmost storey with one slab per
   building outline — 400 mm thick (`RoofSlabThicknessMm`), bearing on the wall heads with
   the wall tops raised into its underside. The rim lips 15 mm (`SolidEmbedMm`) past the

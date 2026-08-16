@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/StaticMeshActor.h"
 #include "GameFramework/Actor.h"
 
 #include "FloorPlanElementActors.generated.h"
@@ -105,15 +106,14 @@ public:
     FString Describe() const;
 };
 
-/// One drawn element, holding its identity and the single mesh component the importer builds.
+/// One drawn element. It is a static mesh actor, so its mesh and material sit in the Details
+/// panel exactly where they do on any static mesh you place by hand.
 UCLASS(Abstract)
-class FLOORPLANUNREAL_API AFloorPlanElementActor : public AActor
+class FLOORPLANUNREAL_API AFloorPlanElementActor : public AStaticMeshActor
 {
     GENERATED_BODY()
 
 public:
-    AFloorPlanElementActor();
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     FString ElementId;
 
