@@ -73,11 +73,12 @@ FloorPlan.Import <path.dxf> [WallLayer|*] [MmPerUnit] [single|double]
 Pass `*` for the layer to accept every layer. Pass `0` for `MmPerUnit` to keep what the file
 declares.
 
-Five flags may appear **anywhere** in the line, in any order, because they are flags rather
+Six flags may appear **anywhere** in the line, in any order, because they are flags rather
 than positions: `bake` writes static mesh assets instead of dynamic meshes, `roof` caps the
 topmost storey with a slab, `wallmat=<asset>` and `floormat=<asset>` pick the materials the
 building imports with (an asset path like `/Game/Materials/M_Brick`; floors, roofs and stairs
-use the floor material), and `json=<path>` dumps the whole model to a file.
+use the floor material), `blockers` adds the invisible shadow casters described under
+*Lighting sealed interiors*, and `json=<path>` dumps the whole model to a file.
 `FloorPlan.Import plan.dxf bake` is enough on its own.
 
 Use `roof` whenever you light the building with a sun. Without it the building is open to the
@@ -359,8 +360,8 @@ In rough order of likelihood:
 
 1. **`UDynamicMesh::EditMesh` signature.** Used in `FloorPlanMeshBuilder::CopyToDynamicMesh`
    with four arguments. Confirmed against working 5.x code but not compiled here.
-2. **`ADynamicMeshActor::GetDynamicMeshComponent()`.** The 5.8 docs still describe the
-   UE4-era `USimpleDynamicMeshComponent`; the accessor is the real one, but verify.
+2. **Runtime-created `UDynamicMeshComponent`.** `FloorPlanMeshPlacer` builds one with
+   `NewObject`, then uses `GetDynamicMesh()` and `NotifyMeshUpdated()` on it.
 3. **Module names in `FloorPlanUnreal.Build.cs`.** `GeometryCore`, `GeometryFramework` and
    `GeometryScriptingCore` are correct for 5.3–5.8. `DynamicMesh` and `GeometryAlgorithms`
    are only needed if you extend beyond what is here — drop them if they fail to resolve.
@@ -424,8 +425,15 @@ Things worth knowing:
 - **Lightmap UVs are not generated.** UV0 is a real unwrap, so if you want baked lighting turn
   on *Generate Lightmap UVs* in the static mesh editor and it has something sane to work from.
 
-The actor keeps its `UDynamicMeshComponent` as its root — it is what `ADynamicMeshActor`
-provides — but it is emptied and hidden, and the static mesh component is attached beneath it.
+Every element actor is a plain `AActor` with a bare `USceneComponent` root and exactly one
+mesh component beneath it: a `UStaticMeshComponent` when baking, a `UDynamicMeshComponent`
+when not. One mesh component means one material slot, so the Details panel's Materials row is
+never ambiguous — the reason the actors are not `ADynamicMeshActor`, whose root component
+carries a material slot of its own and would swallow the edit.
+
+Re-importing rewrites each baked asset in place rather than leaving a numbered copy beside it,
+so actors already placed from those meshes pick up the new geometry and keep the materials you
+gave them.
 
 The material lives on the baked asset, not as a component override, so editing the asset's
 material changes the placed actor too, and the actor's static mesh component slot stays free
@@ -503,10 +511,7 @@ If you see that, the attribute set is missing — check `CopyToDynamicMesh`.
   building outline — 400 mm thick (`RoofSlabThicknessMm`), bearing on the wall heads with
   the wall tops raised into its underside. The rim lips 15 mm (`SolidEmbedMm`) past the
   facade: visually flush, but without the lip the raised wall tops would share the rim's
-  plane and z-fight. When baking, the roof also
-  carries an invisible shadow copy with 500 mm eaves (`RoofOverhangMm`): the overhang shades
-  the upper walls and pushes sunlit surfaces away from the ceiling junctions — which keeps
-  sealed interiors dark at the seams — without protruding visibly. A single-line
+  plane and z-fight. A single-line
   plan has no envelope outline, so its rooms are capped one by one. There are no pitched
   roofs or parapets. Non-top storeys get the same burial: their wall tops rise into the slab
   of the storey above rather than meeting it edge to edge. Stairs are built, but nothing
@@ -545,18 +550,18 @@ A light with any contact length already set is left alone, and
 Clamping auto exposure (a PostProcessVolume with a Min EV100 suited to interiors) reduces the
 amplification and is the standard companion setting; the importer does not touch exposure.
 
-The importer also attacks the seam at its geometric root when baking: every wall carries an
-**invisible shadow blocker** — a copy inflated by 100 mm on every side (`ShadowBlockerMarginMm`)
-that is hidden from the camera but still casts shadows, so the shadow test sees a wall thick
-enough to swallow the seam zone while the visible geometry stays exactly what the drawing
-says. Openings are cut oversize in the blocker so it never eats legitimate light through a
-door or window. Disable with `bGenerateShadowBlockers = false`; the blockers exist only on
-the baked path.
+If a seam survives that, `blockers` (or `bGenerateShadowBlockers`) attacks it geometrically:
+every wall and the roof gain an **invisible shadow blocker** — a copy inflated by 100 mm on
+every side (`ShadowBlockerMarginMm`), and for the roof an eaves ring of 500 mm
+(`RoofOverhangMm`) — hidden from the camera but still casting, so the shadow test sees an
+assembly thick enough to swallow the seam zone while the visible geometry stays exactly what
+the drawing says. Openings are cut oversize in the blocker so it never eats legitimate light
+through a door or window. A storey's blockers all live on one `AFloorPlanShadowActor` named
+`Shadows_<storey>`, so hiding or deleting that single actor turns them off.
 
-Every blocker of a storey lives on one `AFloorPlanShadowActor` named `Shadows_<storey>`, not
-on the wall or roof it shades. Keeping them off the element actors leaves each wall, room and
-roof with exactly one material slot, so the Details panel's Materials row can only mean the
-mesh you can see. Hiding or deleting that one actor turns the whole storey's blockers off.
+It is **off by default**, and deliberately so: it doubles the baked meshes and the shadow-pass
+geometry, and it enlarges the building's own shadow by the blocker margin. Reach for it only
+when a seam is visible after contact shadows, and only on the baked path.
 
 Do not chase this artifact through shadow cvars. It survives, unchanged, all of:
 `r.Shadow.Virtual.*`, `r.RayTracing.Shadows` and its denoiser and bias settings,

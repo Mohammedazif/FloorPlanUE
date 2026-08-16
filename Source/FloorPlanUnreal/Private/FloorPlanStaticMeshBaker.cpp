@@ -2,18 +2,16 @@
 
 #if WITH_EDITOR
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "AssetToolsModule.h"
 #include "DynamicMesh/MeshNormals.h"
 #include "DynamicMeshToMeshDescription.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshSourceData.h"
-#include "IAssetTools.h"
 #include "MaterialDomain.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInterface.h"
 #include "MeshDescription.h"
-#include "Modules/ModuleManager.h"
+#include "Misc/PackageName.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "StaticMeshAttributes.h"
 #include "UObject/Package.h"
@@ -59,20 +57,28 @@ UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& 
         return nullptr;
     }
 
-    FAssetToolsModule& AssetTools =
-        FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
-    FString PackageName;
-    FString AssetName;
-    AssetTools.Get().CreateUniqueAssetName(AssetPathAndName, FString(), PackageName, AssetName);
-
-    UPackage* Package = CreatePackage(*PackageName);
+    const FString AssetName = FPackageName::GetShortName(AssetPathAndName);
+    UPackage* Package = CreatePackage(*AssetPathAndName);
     if (Package == nullptr)
     {
         return nullptr;
     }
 
+    // Re-importing rewrites the asset in place, so actors already placed from it follow along
+    // instead of being orphaned beside a numbered copy.
     UStaticMesh* Baked =
-        NewObject<UStaticMesh>(Package, FName(*AssetName), RF_Public | RF_Standalone);
+        LoadObject<UStaticMesh>(Package, *AssetName, nullptr, LOAD_NoWarn | LOAD_Quiet);
+    const bool bRewritten = Baked != nullptr;
+    if (bRewritten)
+    {
+        Baked->Modify();
+        Baked->PreEditChange(nullptr);
+        Baked->SetNumSourceModels(0);
+    }
+    else
+    {
+        Baked = NewObject<UStaticMesh>(Package, FName(*AssetName), RF_Public | RF_Standalone);
+    }
     if (Baked == nullptr)
     {
         return nullptr;
@@ -124,8 +130,15 @@ UStaticMesh* FFloorPlanStaticMeshBaker::Bake(const UE::Geometry::FDynamicMesh3& 
                *Error.ToString());
     }
 
+    if (bRewritten)
+    {
+        Baked->PostEditChange();
+    }
+    else
+    {
+        FAssetRegistryModule::AssetCreated(Baked);
+    }
     Baked->MarkPackageDirty();
-    FAssetRegistryModule::AssetCreated(Baked);
     return Baked;
 #else
     (void)Source;

@@ -54,9 +54,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lighting")
     bool bEnsureSunContactShadows = true;
 
-    /// Invisible fattened wall copies that only cast shadows, burying the seam-glow zone.
+    /// Doubles the baked meshes with invisible fattened copies; only for a seam glow that
+    /// contact shadows leave behind.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lighting")
-    bool bGenerateShadowBlockers = true;
+    bool bGenerateShadowBlockers = false;
 
     /// UVs are one unit per metre, so a tiling material keeps its scale on every element.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")

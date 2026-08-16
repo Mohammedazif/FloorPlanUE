@@ -42,6 +42,12 @@ FString AFloorPlanShadowActor::Describe() const
                            *StoreyName);
 }
 
+AFloorPlanElementActor::AFloorPlanElementActor()
+{
+    PrimaryActorTick.bCanEverTick = false;
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+}
+
 FString AFloorPlanRoomActor::Describe() const
 {
     const FString Label = RoomName.IsEmpty() ? TEXT("Unnamed") : RoomName;
@@ -58,12 +64,6 @@ FString AFloorPlanRoofActor::Describe() const
 FString AFloorPlanColumnActor::Describe() const
 {
     return FString::Printf(TEXT("Column %.0f x %.0f mm - %s"), WidthMm, DepthMm, *ElementId);
-}
-
-AFloorPlanFixtureActor::AFloorPlanFixtureActor()
-{
-    PrimaryActorTick.bCanEverTick = false;
-    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 }
 
 FString AFloorPlanFixtureActor::Describe() const

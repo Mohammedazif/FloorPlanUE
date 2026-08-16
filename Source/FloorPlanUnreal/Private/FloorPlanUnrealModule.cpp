@@ -15,7 +15,7 @@ namespace
 
     const TCHAR* BuildingUsage =
         TEXT("Usage: FloorPlan.ImportBuilding <name>=<path.dxf>@<elevationMm> ... , plus bake, "
-             "roof, wallmat=<asset>, floormat=<asset> and/or json=<path> anywhere");
+             "roof, blockers, wallmat=<asset>, floormat=<asset> and/or json=<path> anywhere");
 
     UMaterialInterface* LoadMaterialFlag(const FString& Path, FOutputDevice& Output)
     {
@@ -24,7 +24,8 @@ namespace
         {
             ObjectPath += TEXT(".") + FPackageName::GetShortName(ObjectPath);
         }
-        UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, *ObjectPath);
+        UMaterialInterface* Material =
+            LoadObject<UMaterialInterface>(nullptr, *ObjectPath, nullptr, LOAD_NoWarn);
         if (Material == nullptr)
         {
             Output.Logf(ELogVerbosity::Warning, TEXT("Material not found: %s"), *Path);
@@ -47,6 +48,11 @@ namespace
             if (Args[Index].Equals(TEXT("roof"), ESearchCase::IgnoreCase))
             {
                 Options.bGenerateRoof = true;
+                continue;
+            }
+            if (Args[Index].Equals(TEXT("blockers"), ESearchCase::IgnoreCase))
+            {
+                Options.bGenerateShadowBlockers = true;
                 continue;
             }
             if (Args[Index].StartsWith(TEXT("json="), ESearchCase::IgnoreCase))

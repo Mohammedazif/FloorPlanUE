@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DynamicMeshActor.h"
 #include "GameFramework/Actor.h"
 
 #include "FloorPlanElementActors.generated.h"
@@ -106,21 +105,31 @@ public:
     FString Describe() const;
 };
 
+/// One drawn element, holding its identity and the single mesh component the importer builds.
+UCLASS(Abstract)
+class FLOORPLANUNREAL_API AFloorPlanElementActor : public AActor
+{
+    GENERATED_BODY()
+
+public:
+    AFloorPlanElementActor();
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
+    FString ElementId;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
+    FString StoreyName;
+};
+
 /// A room, carrying the stable identity that makes the import data rather than a picture.
 UCLASS(BlueprintType)
-class FLOORPLANUNREAL_API AFloorPlanRoomActor : public ADynamicMeshActor
+class FLOORPLANUNREAL_API AFloorPlanRoomActor : public AFloorPlanElementActor
 {
     GENERATED_BODY()
 
 public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString ElementId;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     FString RoomName;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString StoreyName;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     double FloorAreaSquareMetres = 0.0;
@@ -143,34 +152,22 @@ public:
 
 /// The slab capping a room of the topmost storey, so the sun stays outside the building.
 UCLASS(BlueprintType)
-class FLOORPLANUNREAL_API AFloorPlanRoofActor : public ADynamicMeshActor
+class FLOORPLANUNREAL_API AFloorPlanRoofActor : public AFloorPlanElementActor
 {
     GENERATED_BODY()
 
 public:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString ElementId;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString StoreyName;
-
     UFUNCTION(BlueprintCallable, Category = "Floor Plan")
     FString Describe() const;
 };
 
 /// A structural column, extruded from the profile it was drawn as.
 UCLASS(BlueprintType)
-class FLOORPLANUNREAL_API AFloorPlanColumnActor : public ADynamicMeshActor
+class FLOORPLANUNREAL_API AFloorPlanColumnActor : public AFloorPlanElementActor
 {
     GENERATED_BODY()
 
 public:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString ElementId;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString StoreyName;
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     double WidthMm = 0.0;
 
@@ -184,24 +181,16 @@ public:
 /// A block the drawing places but this plugin does not model: furniture, fittings, equipment.
 /// It carries the name and transform so you can attach your own mesh to it.
 UCLASS(BlueprintType)
-class FLOORPLANUNREAL_API AFloorPlanFixtureActor : public AActor
+class FLOORPLANUNREAL_API AFloorPlanFixtureActor : public AFloorPlanElementActor
 {
     GENERATED_BODY()
 
 public:
-    AFloorPlanFixtureActor();
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString ElementId;
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     FString BlockName;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     FString SourceLayer;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString StoreyName;
 
     UFUNCTION(BlueprintCallable, Category = "Floor Plan")
     FString Describe() const;
@@ -209,17 +198,11 @@ public:
 
 /// A flight of steps climbing from one storey to the next.
 UCLASS(BlueprintType)
-class FLOORPLANUNREAL_API AFloorPlanStairActor : public ADynamicMeshActor
+class FLOORPLANUNREAL_API AFloorPlanStairActor : public AFloorPlanElementActor
 {
     GENERATED_BODY()
 
 public:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString ElementId;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString StoreyName;
-
     /// Storey this flight arrives at, empty when nothing was found stacked above it.
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     FString ArrivesAtStorey;
@@ -246,22 +229,16 @@ public:
 
 /// A wall segment with its measured thickness and the identity of the run it came from.
 UCLASS(BlueprintType)
-class FLOORPLANUNREAL_API AFloorPlanWallActor : public ADynamicMeshActor
+class FLOORPLANUNREAL_API AFloorPlanWallActor : public AFloorPlanElementActor
 {
     GENERATED_BODY()
 
 public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString ElementId;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     double ThicknessMm = 0.0;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     double LengthMm = 0.0;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
-    FString StoreyName;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
     int32 OpeningCount = 0;
