@@ -433,6 +433,12 @@ for a per-actor override. The one exception: a translucent import material is sw
 asset for a distance-field-safe one (the DF builder drops translucent-slot triangles), and
 only then does the component carry the real material as an override.
 
+There are three ways to material an import, in the order they are worth reaching for:
+`wallmat=` / `floormat=` on the import line dresses the whole building as it is built; editing
+the baked asset re-dresses every actor placed from it; and the Details panel's Materials row
+overrides the one selected actor. All three work on a baked import — the actor carries a single
+material slot precisely so the third one is unambiguous.
+
 ## Walls sit *into* the slab, not on it
 
 The floor slab occupies Z from 0 down to −200 mm. Walls run from the same −200 mm up to the
@@ -546,6 +552,11 @@ enough to swallow the seam zone while the visible geometry stays exactly what th
 says. Openings are cut oversize in the blocker so it never eats legitimate light through a
 door or window. Disable with `bGenerateShadowBlockers = false`; the blockers exist only on
 the baked path.
+
+Every blocker of a storey lives on one `AFloorPlanShadowActor` named `Shadows_<storey>`, not
+on the wall or roof it shades. Keeping them off the element actors leaves each wall, room and
+roof with exactly one material slot, so the Details panel's Materials row can only mean the
+mesh you can see. Hiding or deleting that one actor turns the whole storey's blockers off.
 
 Do not chase this artifact through shadow cvars. It survives, unchanged, all of:
 `r.Shadow.Virtual.*`, `r.RayTracing.Shadows` and its denoiser and bias settings,

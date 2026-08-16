@@ -86,6 +86,26 @@ public:
     FString Describe() const;
 };
 
+/// A storey's invisible shadow casters, kept off the actors they shade so those keep one
+/// material slot each.
+UCLASS(BlueprintType)
+class FLOORPLANUNREAL_API AFloorPlanShadowActor : public AActor
+{
+    GENERATED_BODY()
+
+public:
+    AFloorPlanShadowActor();
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
+    FString StoreyName;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Floor Plan")
+    int32 CasterCount = 0;
+
+    UFUNCTION(BlueprintCallable, Category = "Floor Plan")
+    FString Describe() const;
+};
+
 /// A room, carrying the stable identity that makes the import data rather than a picture.
 UCLASS(BlueprintType)
 class FLOORPLANUNREAL_API AFloorPlanRoomActor : public ADynamicMeshActor

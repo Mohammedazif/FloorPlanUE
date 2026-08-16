@@ -69,9 +69,9 @@ bool FFloorPlanMeshPlacer::Place(const UFloorPlanImportOptions& Options,
 bool FFloorPlanMeshPlacer::PlaceHiddenCaster(const UFloorPlanImportOptions& Options,
                                               const FString& AssetFolder,
                                               const FString& AssetName, const FDynamicMesh3& Mesh,
-                                              ADynamicMeshActor* Actor)
+                                              AActor* Host, const FTransform& Placement)
 {
-    if (!Options.bBakeToStaticMesh || Actor == nullptr)
+    if (!Options.bBakeToStaticMesh || Host == nullptr)
     {
         return false;
     }
@@ -81,12 +81,13 @@ bool FFloorPlanMeshPlacer::PlaceHiddenCaster(const UFloorPlanImportOptions& Opti
     {
         return false;
     }
-    UStaticMeshComponent* Component = NewObject<UStaticMeshComponent>(Actor);
+    UStaticMeshComponent* Component = NewObject<UStaticMeshComponent>(Host);
     Component->SetStaticMesh(Baked);
     Component->SetVisibility(false);
     Component->bCastHiddenShadow = true;
-    Component->SetupAttachment(Actor->GetRootComponent());
+    Component->SetupAttachment(Host->GetRootComponent());
     Component->RegisterComponent();
-    Actor->AddInstanceComponent(Component);
+    Component->SetWorldTransform(Placement);
+    Host->AddInstanceComponent(Component);
     return true;
 }

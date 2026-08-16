@@ -160,10 +160,33 @@ namespace
         return nullptr;
     }
 
+    AFloorPlanShadowActor* SpawnShadowHost(UWorld& World, const UFloorPlanImportOptions& Options,
+                                            AFloorPlanStoreyActor& Storey, const FVector& Lift,
+                                            const FAttachmentTransformRules& AttachRules)
+    {
+        if (!Options.bGenerateShadowBlockers || !Options.bBakeToStaticMesh)
+        {
+            return nullptr;
+        }
+        AFloorPlanShadowActor* Actor =
+            World.SpawnActor<AFloorPlanShadowActor>(Lift, FRotator::ZeroRotator);
+        if (Actor == nullptr)
+        {
+            return nullptr;
+        }
+        Actor->StoreyName = Storey.StoreyName;
+#if WITH_EDITOR
+        Actor->SetActorLabel(FString::Printf(TEXT("Shadows_%s"), *Storey.StoreyName));
+#endif
+        Actor->AttachToActor(&Storey, AttachRules);
+        return Actor;
+    }
+
     void SpawnRoofs(UWorld& World, const BuildingModel& Model,
                     const UFloorPlanImportOptions& Options, const FString& AssetFolder,
                     AFloorPlanStoreyActor& Storey, const FVector& Lift,
-                    const FAttachmentTransformRules& AttachRules, FFloorPlanSpawnReport& Report)
+                    const FAttachmentTransformRules& AttachRules,
+                    AFloorPlanShadowActor* Shadows, FFloorPlanSpawnReport& Report)
     {
         const double Scale = Model.MillimetresPerUnit;
         const FVector RoofLift =
@@ -260,19 +283,20 @@ namespace
             {
                 ++Report.BakedMeshes;
             }
-            if (Options.bGenerateShadowBlockers && Options.bBakeToStaticMesh)
+            if (Shadows != nullptr)
             {
                 FDynamicMesh3 BlockerMesh;
                 FFloorPlanMeshReport BlockerReport;
                 FTransform BlockerPlacement = FTransform::Identity;
                 if (FFloorPlanMeshBuilder::BuildRoof(Boundary, RoofSlabThicknessMm,
                                                      RoofOverhangMm, BlockerMesh,
-                                                     BlockerPlacement, BlockerReport))
-                {
+                                                     BlockerPlacement, BlockerReport) &&
                     FFloorPlanMeshPlacer::PlaceHiddenCaster(
                         Options, AssetFolder,
                         FString::Printf(TEXT("Roof_%s_Shadow"), *Actor->ElementId.Left(8)),
-                        BlockerMesh, Actor);
+                        BlockerMesh, Shadows, Actor->GetActorTransform()))
+                {
+                    ++Shadows->CasterCount;
                 }
             }
             Actor->AttachToActor(&Storey, AttachRules);
@@ -347,6 +371,8 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
         ++Report.Rooms;
     }
 
+    AFloorPlanShadowActor* Shadows = SpawnShadowHost(World, Options, Storey, Lift, AttachRules);
+
     // The slab or roof above buries each wall top instead of meeting it edge to edge.
     const bool bCarriesRoof = Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty();
     const bool bSlabAbove = !Rise.ArrivesAtStorey.IsEmpty() && Options.bGenerateFloors;
@@ -415,7 +441,7 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
             {
                 ++Report.UnsealedMeshes;
             }
-            if (Options.bGenerateShadowBlockers && Options.bBakeToStaticMesh)
+            if (Shadows != nullptr)
             {
                 FFloorPlanWallShape Blocker = Shape;
                 Blocker.ThicknessMm += ShadowBlockerMarginMm + ShadowBlockerMarginMm;
@@ -449,12 +475,13 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
                 FFloorPlanMeshReport BlockerReport;
                 FTransform BlockerPlacement = FTransform::Identity;
                 if (FFloorPlanMeshBuilder::BuildWall(Blocker, BlockerMesh, BlockerPlacement,
-                                                     BlockerReport))
-                {
+                                                     BlockerReport) &&
                     FFloorPlanMeshPlacer::PlaceHiddenCaster(
                         Options, AssetFolder,
                         FString::Printf(TEXT("Wall_%s_Shadow"), *Actor->ElementId.Left(8)),
-                        BlockerMesh, Actor);
+                        BlockerMesh, Shadows, Actor->GetActorTransform()))
+                {
+                    ++Shadows->CasterCount;
                 }
             }
         }
@@ -466,7 +493,12 @@ void FFloorPlanElementSpawner::Spawn(UWorld& World, const BuildingModel& Model,
 
     if (Options.bGenerateRoof && Rise.ArrivesAtStorey.IsEmpty())
     {
-        SpawnRoofs(World, Model, Options, AssetFolder, Storey, Lift, AttachRules, Report);
+        SpawnRoofs(World, Model, Options, AssetFolder, Storey, Lift, AttachRules, Shadows,
+                   Report);
+    }
+    if (Shadows != nullptr)
+    {
+        Report.Actors.Add(Shadows);
     }
 
     FFloorPlanFittingSpawner::Spawn(World, Model, Options, AssetFolder, Rise, Storey, Lift,

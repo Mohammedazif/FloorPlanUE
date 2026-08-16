@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "DynamicMesh/DynamicMesh3.h"
 
+class AActor;
 class ADynamicMeshActor;
 class UFloorPlanImportOptions;
 class UMaterialInterface;
@@ -16,9 +17,9 @@ public:
                       const FString& AssetName, UMaterialInterface* Material,
                       const UE::Geometry::FDynamicMesh3& Mesh, ADynamicMeshActor* Actor);
 
-    /// Attaches an invisible mesh that still casts shadows. Baking only; false otherwise.
+    /// Adds an invisible mesh that still casts shadows, standing where Placement puts it.
     static bool PlaceHiddenCaster(const UFloorPlanImportOptions& Options,
                                   const FString& AssetFolder, const FString& AssetName,
-                                  const UE::Geometry::FDynamicMesh3& Mesh,
-                                  ADynamicMeshActor* Actor);
+                                  const UE::Geometry::FDynamicMesh3& Mesh, AActor* Host,
+                                  const FTransform& Placement);
 };

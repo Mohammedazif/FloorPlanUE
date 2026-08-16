@@ -30,6 +30,18 @@ FString AFloorPlanStoreyActor::Describe() const
                            ColumnCount, FixtureCount, TotalFloorAreaSquareMetres);
 }
 
+AFloorPlanShadowActor::AFloorPlanShadowActor()
+{
+    PrimaryActorTick.bCanEverTick = false;
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+}
+
+FString AFloorPlanShadowActor::Describe() const
+{
+    return FString::Printf(TEXT("%d invisible shadow caster(s) for %s"), CasterCount,
+                           *StoreyName);
+}
+
 FString AFloorPlanRoomActor::Describe() const
 {
     const FString Label = RoomName.IsEmpty() ? TEXT("Unnamed") : RoomName;
